@@ -1,25 +1,44 @@
-# Python
+# ========================
+# Python (backend)
+# ========================
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
 *.pyd
 
-# Virtual Environment
+# Virtual environments
 venv/
 env/
 .venv/
 
+# ========================
 # Environment variables
+# ========================
 .env
+.env.*
+!.env.example
 
-# VSCode
-.vscode/
+# ========================
+# Node / Frontend
+# ========================
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
 
-# OS
-.DS_Store
-Thumbs.db
-# dependencies
-frontend/node_modules
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ========================
+# TypeScript
+# ========================
+frontend/*.tsbuildinfo
+
+# ========================
+# Package managers
+# ========================
 frontend/.pnp
 frontend/.pnp.*
 frontend/.yarn/*
@@ -28,32 +47,29 @@ frontend/.yarn/*
 !frontend/.yarn/releases
 !frontend/.yarn/versions
 
-# testing
-frontend/coverage
-
-# next.js
-frontend/.next/
-frontend/out/
-
-# production
-frontend/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files
-frontend/.env*
-
-# vercel
+# ========================
+# Vercel
+# ========================
 frontend/.vercel
 
-# typescript
-frontend/*.tsbuildinfo
-frontend/next-env.d.ts
+# ========================
+# Testing
+# ========================
+frontend/coverage/
+
+# ========================
+# Editor
+# ========================
+.vscode/
+.idea/
+
+# ========================
+# OS files
+# ========================
+.DS_Store
+Thumbs.db
+
+# ========================
+# Misc
+# ========================
+*.pem
