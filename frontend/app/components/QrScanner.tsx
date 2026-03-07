@@ -47,7 +47,7 @@ export default function QrScanner() {
 
       setIsScanning(true);
     } catch (err) {
-      setError("Không mở được camera. Hãy kiểm tra quyền truy cập camera hoặc thử bằng HTTPS.");
+      setError("Không mở được camera.  Hãy kiểm tra quyền truy cập camera hoặc thử bằng HTTPS.");
       console.error(err);
     }
   };
