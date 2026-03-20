@@ -39,7 +39,7 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-white/20">
         {/* Email Field */}
         <div className="mb-6">
-          <label htmlFor="email" className="block text-white text-sm font-medium mb-2 flex items-center gap-2">
+          <label htmlFor="email" className="text-white text-sm font-medium mb-2 flex items-center gap-2">
             <FiUser className="text-white/80" />
             Email
           </label>
@@ -56,7 +56,7 @@ export default function LoginPage() {
 
         {/* Password Field */}
         <div className="mb-8 relative">
-          <label htmlFor="password" className="block text-white text-sm font-medium mb-2 flex items-center gap-2">
+          <label htmlFor="password" className="text-white text-sm font-medium mb-2 flex items-center gap-2">
             <FiLock className="text-white/80" />
             Password
           </label>
