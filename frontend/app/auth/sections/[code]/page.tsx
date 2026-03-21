@@ -43,7 +43,7 @@ export default function SectionDetailPage() {
       )
     )
   }
-  
+
 
   return (
     <div className="min-h-screen bg-[#EBF4F6]">
@@ -117,15 +117,15 @@ export default function SectionDetailPage() {
                       </span>
                     </td>
 
-                    <button
+                    <td
                       onClick={() => {
                         setSelectedSession(s.id)
                         setOpenQR(true)
                       }}
-                      className="text-[#09637E] hover:underline"
+                      className="text-[#09637E] cursor-pointer hover:underline"
                     >
                       Generate QR
-                    </button>
+                    </td>
 
                     <td className="px-6 py-4 text-black">
                       {s.checkin}
@@ -144,7 +144,16 @@ export default function SectionDetailPage() {
           </div>
         </div>
       </main>
-      
+      {
+        openQR && selectedSession && (
+          <QRCodeModal
+            sessionId={selectedSession}
+            sectionCode={code as string}
+            createdAt={new Date()}
+            onClose={() => setOpenQR(false)}
+          />
+        )
+      }
     </div>
   );
 }
