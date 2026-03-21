@@ -6,17 +6,107 @@ import Image from 'next/image';
 import { FaUser } from "react-icons/fa";
 import { useRouter } from 'next/navigation';
 import { FiArrowLeft, FiX } from "react-icons/fi";
+import { useSearchParams } from "next/navigation"
+import Pagination from "@/components/Pagination"
+import CreateSectionModal from "@/components/Section/CreateSectionModal"
 
 // Mock data
 const mockSections = [
-  { code: 'DSA2026', name: 'Data Structures and Algorithms', enrolled: 45, totalSessions: 5 },
-  { code: 'DSA2026', name: 'Technical Programming', enrolled: 45, totalSessions: 4 },
-  { code: 'CAL2026', name: 'Calculus 1', enrolled: 45, totalSessions: 7 },
-  { code: 'DIP2026', name: 'Digital Image Processing', enrolled: 45, totalSessions: 4 },
-  { code: 'DAA2026', name: 'Design Analysis Algorithms', enrolled: 45, totalSessions: 10 },
-  { code: 'MLB2026', name: 'Machine Learning Basic', enrolled: 45, totalSessions: 5 },
-  { code: 'NLP2026', name: 'Natural Language Processing', enrolled: 45, totalSessions: 5 },
-];
+  { code: 'DSA2026', name: 'Data Structures and Algorithms', enrolled: 42, totalSessions: 12 },
+  { code: 'TPR2026', name: 'Technical Programming', enrolled: 38, totalSessions: 10 },
+  { code: 'CAL2026', name: 'Calculus 1', enrolled: 55, totalSessions: 14 },
+  { code: 'DIP2026', name: 'Digital Image Processing', enrolled: 29, totalSessions: 9 },
+  { code: 'DAA2026', name: 'Design and Analysis of Algorithms', enrolled: 47, totalSessions: 11 },
+  { code: 'MLB2026', name: 'Machine Learning Basics', enrolled: 36, totalSessions: 10 },
+  { code: 'NLP2026', name: 'Natural Language Processing', enrolled: 33, totalSessions: 8 },
+
+  { code: 'OSY2026', name: 'Operating Systems', enrolled: 50, totalSessions: 13 },
+  { code: 'DBS2026', name: 'Database Systems', enrolled: 44, totalSessions: 12 },
+  { code: 'CNP2026', name: 'Computer Networks', enrolled: 41, totalSessions: 11 },
+  { code: 'SE2026', name: 'Software Engineering', enrolled: 39, totalSessions: 10 },
+  { code: 'AI2026', name: 'Introduction to Artificial Intelligence', enrolled: 46, totalSessions: 12 },
+  { code: 'DS2026', name: 'Data Science Fundamentals', enrolled: 34, totalSessions: 9 },
+  { code: 'CS2026', name: 'Cyber Security Basics', enrolled: 28, totalSessions: 8 },
+
+  { code: 'HCI2026', name: 'Human Computer Interaction', enrolled: 31, totalSessions: 7 },
+  { code: 'CGA2026', name: 'Computer Graphics', enrolled: 27, totalSessions: 8 },
+  { code: 'IOT2026', name: 'Internet of Things', enrolled: 35, totalSessions: 9 },
+  { code: 'BIG2026', name: 'Big Data Analytics', enrolled: 40, totalSessions: 11 },
+  { code: 'CLD2026', name: 'Cloud Computing', enrolled: 37, totalSessions: 10 },
+  { code: 'MOB2026', name: 'Mobile Application Development', enrolled: 43, totalSessions: 10 },
+  { code: 'WEB2026', name: 'Web Development', enrolled: 48, totalSessions: 12 },
+
+  // thêm mới
+  { code: 'ALG2026', name: 'Advanced Algorithms', enrolled: 45, totalSessions: 12 },
+  { code: 'STA2026', name: 'Statistics for Computing', enrolled: 52, totalSessions: 13 },
+  { code: 'LIN2026', name: 'Linear Algebra', enrolled: 49, totalSessions: 12 },
+  { code: 'PHY2026', name: 'Physics for Engineers', enrolled: 53, totalSessions: 14 },
+  { code: 'CHE2026', name: 'Chemistry Basics', enrolled: 30, totalSessions: 10 },
+  { code: 'ENG2026', name: 'English for IT', enrolled: 60, totalSessions: 15 },
+  { code: 'PRJ2026', name: 'Capstone Project', enrolled: 25, totalSessions: 16 },
+
+  { code: 'DEV2026', name: 'DevOps Fundamentals', enrolled: 41, totalSessions: 11 },
+  { code: 'UXD2026', name: 'UX/UI Design', enrolled: 33, totalSessions: 9 },
+  { code: 'BLK2026', name: 'Blockchain Basics', enrolled: 29, totalSessions: 8 },
+  { code: 'ARV2026', name: 'AR/VR Development', enrolled: 22, totalSessions: 7 },
+  { code: 'GAM2026', name: 'Game Development', enrolled: 38, totalSessions: 10 },
+  { code: 'AUT2026', name: 'Automation Testing', enrolled: 36, totalSessions: 9 },
+  { code: 'MAN2026', name: 'IT Project Management', enrolled: 44, totalSessions: 11 },
+
+  { code: 'FIN2026', name: 'Financial Technology', enrolled: 27, totalSessions: 8 },
+  { code: 'ECO2026', name: 'Economics for Engineers', enrolled: 48, totalSessions: 12 },
+  { code: 'LAW2026', name: 'IT Law and Ethics', enrolled: 35, totalSessions: 9 },
+  { code: 'RES2026', name: 'Research Methods', enrolled: 32, totalSessions: 8 },
+  { code: 'SYS2026', name: 'System Analysis and Design', enrolled: 46, totalSessions: 11 },
+  { code: 'EMB2026', name: 'Embedded Systems', enrolled: 31, totalSessions: 9 },
+   { code: 'DSA2026', name: 'Data Structures and Algorithms', enrolled: 42, totalSessions: 12 },
+  { code: 'TPR2026', name: 'Technical Programming', enrolled: 38, totalSessions: 10 },
+  { code: 'CAL2026', name: 'Calculus 1', enrolled: 55, totalSessions: 14 },
+  { code: 'DIP2026', name: 'Digital Image Processing', enrolled: 29, totalSessions: 9 },
+  { code: 'DAA2026', name: 'Design and Analysis of Algorithms', enrolled: 47, totalSessions: 11 },
+  { code: 'MLB2026', name: 'Machine Learning Basics', enrolled: 36, totalSessions: 10 },
+  { code: 'NLP2026', name: 'Natural Language Processing', enrolled: 33, totalSessions: 8 },
+
+  { code: 'OSY2026', name: 'Operating Systems', enrolled: 50, totalSessions: 13 },
+  { code: 'DBS2026', name: 'Database Systems', enrolled: 44, totalSessions: 12 },
+  { code: 'CNP2026', name: 'Computer Networks', enrolled: 41, totalSessions: 11 },
+  { code: 'SE2026', name: 'Software Engineering', enrolled: 39, totalSessions: 10 },
+  { code: 'AI2026', name: 'Introduction to Artificial Intelligence', enrolled: 46, totalSessions: 12 },
+  { code: 'DS2026', name: 'Data Science Fundamentals', enrolled: 34, totalSessions: 9 },
+  { code: 'CS2026', name: 'Cyber Security Basics', enrolled: 28, totalSessions: 8 },
+
+  { code: 'HCI2026', name: 'Human Computer Interaction', enrolled: 31, totalSessions: 7 },
+  { code: 'CGA2026', name: 'Computer Graphics', enrolled: 27, totalSessions: 8 },
+  { code: 'IOT2026', name: 'Internet of Things', enrolled: 35, totalSessions: 9 },
+  { code: 'BIG2026', name: 'Big Data Analytics', enrolled: 40, totalSessions: 11 },
+  { code: 'CLD2026', name: 'Cloud Computing', enrolled: 37, totalSessions: 10 },
+  { code: 'MOB2026', name: 'Mobile Application Development', enrolled: 43, totalSessions: 10 },
+  { code: 'WEB2026', name: 'Web Development', enrolled: 48, totalSessions: 12 },
+
+  // thêm mới
+  { code: 'ALG2026', name: 'Advanced Algorithms', enrolled: 45, totalSessions: 12 },
+  { code: 'STA2026', name: 'Statistics for Computing', enrolled: 52, totalSessions: 13 },
+  { code: 'LIN2026', name: 'Linear Algebra', enrolled: 49, totalSessions: 12 },
+  { code: 'PHY2026', name: 'Physics for Engineers', enrolled: 53, totalSessions: 14 },
+  { code: 'CHE2026', name: 'Chemistry Basics', enrolled: 30, totalSessions: 10 },
+  { code: 'ENG2026', name: 'English for IT', enrolled: 60, totalSessions: 15 },
+  { code: 'PRJ2026', name: 'Capstone Project', enrolled: 25, totalSessions: 16 },
+
+  { code: 'DEV2026', name: 'DevOps Fundamentals', enrolled: 41, totalSessions: 11 },
+  { code: 'UXD2026', name: 'UX/UI Design', enrolled: 33, totalSessions: 9 },
+  { code: 'BLK2026', name: 'Blockchain Basics', enrolled: 29, totalSessions: 8 },
+  { code: 'ARV2026', name: 'AR/VR Development', enrolled: 22, totalSessions: 7 },
+  { code: 'GAM2026', name: 'Game Development', enrolled: 38, totalSessions: 10 },
+  { code: 'AUT2026', name: 'Automation Testing', enrolled: 36, totalSessions: 9 },
+  { code: 'MAN2026', name: 'IT Project Management', enrolled: 44, totalSessions: 11 },
+
+  { code: 'FIN2026', name: 'Financial Technology', enrolled: 27, totalSessions: 8 },
+  { code: 'ECO2026', name: 'Economics for Engineers', enrolled: 48, totalSessions: 12 },
+  { code: 'LAW2026', name: 'IT Law and Ethics', enrolled: 35, totalSessions: 9 },
+  { code: 'RES2026', name: 'Research Methods', enrolled: 32, totalSessions: 8 },
+  { code: 'SYS2026', name: 'System Analysis and Design', enrolled: 46, totalSessions: 11 },
+  { code: 'EMB2026', name: 'Embedded Systems', enrolled: 31, totalSessions: 9 },
+]
 
 export default function SectionsPage() {
   const [sections] = useState(mockSections);
@@ -29,6 +119,9 @@ export default function SectionsPage() {
 
   const router = useRouter();
   // const user = { image: '/path/to/your-avatar.jpg' }; // → thay bằng real user sau
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -44,6 +137,23 @@ export default function SectionsPage() {
     // setFormData({ code: '', name: '', description: '' }); // reset nếu cần
   };
 
+
+  // =============== Xử lý phân trang
+
+
+  const searchParams = useSearchParams()
+  const page = Number(searchParams.get("page")) || 1
+
+  function getSections(page: number, limit = 5) {
+    const start = (page - 1) * limit
+    const end = start + limit
+
+    return {
+      items: mockSections.slice(start, end),
+      totalPages: Math.ceil(mockSections.length / limit),
+    }
+  }
+  const data = getSections(page, 7) // mỗi page 10 dòng
   return (
     <div className="min-h-screen bg-gray-50 relative">
       {/* Header */}
@@ -59,21 +169,21 @@ export default function SectionsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
           <button
             onClick={() => router.push('/auth/home')}
-            className="flex items-center gap-2 text-gray-700 hover:text-black text-xl transition"
+            className="flex items-center gap-2 cu text-gray-700 hover:text-black cursor-pointer text-xl transition"
           >
             <FiArrowLeft />
           </button>
 
           <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-[#09637E] hover:bg-[#085a70] text-white px-5 py-2.5 rounded-lg font-medium transition shadow-md flex items-center gap-2"
+            onClick={() => setIsOpen(true)}
+            className="bg-[#09637E] hover:bg-[#085a70] cursor-pointer text-white px-5 py-2.5 rounded-lg font-medium transition shadow-md flex items-center gap-2"
           >
             + Create Section
           </button>
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+        <div className="overflow-x-auto h-106 rounded-lg border border-gray-200 shadow-sm">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-[#09637E] text-white">
               <tr>
@@ -84,15 +194,24 @@ export default function SectionsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {sections.map((section, index) => (
+              {data.items.map((section, index) => (
                 <tr
                   key={index}
-                  className={`${index % 2 === 0 ? 'bg-teal-50' : 'bg-white'} hover:bg-[#7AB2B2]/30 transition-colors cursor-pointer`}
+                  className="bg-teal-50 hover:bg-[#7AB2B2]/30 transition-colors cursor-pointer"
+                  onClick={() => router.push(`/auth/sections/${section.code}`)}
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{section.code}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{section.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{section.enrolled}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{section.totalSessions}</td>
+                  <td className="px-6 py-4 h-13 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {section.code}
+                  </td>
+                  <td className="px-6 py-4 h-13  whitespace-nowrap text-sm text-gray-700">
+                    {section.name}
+                  </td>
+                  <td className="px-6 py-4 h-13 whitespace-nowrap text-sm text-gray-700">
+                    {section.enrolled}
+                  </td>
+                  <td className="px-6 py-4 h-13 whitespace-nowrap text-sm text-gray-700">
+                    {section.totalSessions}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -100,103 +219,18 @@ export default function SectionsPage() {
         </div>
 
         {/* Pagination (cập nhật màu nút active) */}
-        <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm text-gray-600">
-          <div>
-            {/* Showing 1 to 10 of 68 results (có thể động sau) */}
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50">
-              ← Previous
-            </button>
-            <nav className="hidden md:flex gap-1">
-              <button className="px-4 py-2 border border-gray-300 rounded-md bg-black text-white hover:bg-[#085a70]">1</button>
-              <button className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">2</button>
-              <span className="px-2 py-2">...</span>
-              <button className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">67</button>
-              <button className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">68</button>
-            </nav>
-            <button className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
-              Next →
-            </button>
-          </div>
-        </div>
+        <Pagination totalPages={data.totalPages} />
       </main>
 
       {/* Modal Create Section */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
-            {/* Modal Header */}
-            <div className="bg-[#09637E] text-white px-6 py-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Create a new Section</h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-white hover:text-gray-200 transition"
-              >
-                <FiX size={24} />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
-              <div>
-                <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
-                  Code <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="code"
-                  name="code"
-                  type="text"
-                  value={formData.code}
-                  onChange={handleInputChange}
-                  placeholder="Enter section code"
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#09637E] focus:border-[#09637E]"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#09637E] focus:border-[#09637E]"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Enter a description (optional)"
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#09637E] focus:border-[#09637E]"
-                />
-              </div>
-
-              <div className="flex justify-end pt-3">
-                <button
-                  type="submit"
-                  className="bg-[#09637E] hover:bg-[#085a70] text-white px-6 py-2.5 rounded-lg font-medium transition shadow-sm"
-                >
-                  + Create Section
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <CreateSectionModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        formData={formData}
+        setFormData={setFormData}
+        onSubmit={handleSubmit}
+        loading={loading}
+      />
     </div>
   );
 }
