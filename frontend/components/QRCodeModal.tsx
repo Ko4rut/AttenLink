@@ -47,7 +47,7 @@ export default function QRCodeModal({ sessionId, sectionCode, createdAt, onClose
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-3d     right-3 cursor-pointer hover: blur-2xl"
+          className="absolute top-3d right-3 cursor-pointer"
         >
           <FiX size={20} />
         </button>

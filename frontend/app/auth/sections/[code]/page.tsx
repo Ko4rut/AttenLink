@@ -5,7 +5,10 @@ import { FaUser } from "react-icons/fa";
 import { useRouter } from 'next/navigation';
 import { FiArrowLeft } from "react-icons/fi";
 import { useState } from 'react';
+import { formatSessionTime } from '@/utils/time';
 import QRCodeModal from '@/components/QRCodeModal';
+
+
 
 type Session = {
   id: number;
@@ -18,8 +21,8 @@ type Session = {
 // Mock data (chỉ để render UI)
 const mockSessions: Session[] = [
   { id: 1, name: "Session 1", time: "April 1 2026 20:30-23", status: "Closed", qr: "Expired", checkin: "42/45" },
-  { id: 3, name: "Session 3", time: "April 15 2026 20:32-10", status: "Closed", qr: "Expired", checkin: "44/45" },
-  { id: 4, name: "Session 4", time: "April 22 2026 20:39-20", status: "Active", qr: "Generate QR", checkin: "44/45" },
+  { id: 2, name: "Session 2", time: "April 15 2026 20:32-10", status: "Closed", qr: "Expired", checkin: "44/45" },
+  { id: 3, name: "Session 3", time: "April 22 2026 20:39-20", status: "Active", qr: "Generate QR", checkin: "44/45" },
 ];
 
 
@@ -42,6 +45,35 @@ export default function SectionDetailPage() {
           : session
       )
     )
+  }
+
+  function create_session() {
+    const alert = confirm("Bạn có chắc muốn thêm một session không?")
+    const date =  formatSessionTime(new Date())
+    if (!alert) return
+    else{
+
+      // Close active sessions before add new session in array
+      setSessions(prev => 
+        prev.map(session =>({
+          ...session,
+          status: "Closed"
+        })
+        )
+      ) 
+
+      setSessions(prev => [
+      ... prev, 
+      {
+        id: prev.length+1,
+        name: `Session ${prev.length + 1}`,
+        time: date,
+        status: "Active",
+        qr: "Generate QR",
+        checkin: "0/45"
+      }
+      ])
+    }
   }
 
 
@@ -70,8 +102,9 @@ export default function SectionDetailPage() {
           {/* Create button */}
           <button
             className="bg-[#09637E] hover:bg-[#085a70] text-white px-5 py-2.5 rounded-lg font-medium transition shadow-md flex items-center gap-2"
+            onClick={()=>{create_session()}}
           >
-            + Create Section
+            + Create Session
           </button>
         </div>
 
@@ -86,8 +119,8 @@ export default function SectionDetailPage() {
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="min-w-full">
-              <thead className="bg-[#088395]">
-                <tr>
+              <thead className="bg-[#088395] text-white">
+                <tr >
                   <th className="px-6 py-3 text-left text-sm font-semibold">#</th>
                   <th className="px-6 py-3 text-left">Session</th>
                   <th className="px-6 py-3 text-left">Time</th>
