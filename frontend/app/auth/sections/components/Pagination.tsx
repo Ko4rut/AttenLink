@@ -7,6 +7,7 @@ type Props = {
 }
 
 export default function Pagination({ totalPages }: Props) {
+  
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -16,6 +17,7 @@ export default function Pagination({ totalPages }: Props) {
     const params = new URLSearchParams(searchParams.toString())
     params.set("page", page.toString())
     router.push(`?${params.toString()}`)
+    router.refresh()   
   }
 
   // Tạo list page (có ... giống UI bạn)

@@ -1,14 +1,10 @@
 // app/sections/page.tsx
-'use client';
 
-import { useState } from 'react';
 import Image from 'next/image';
 import { FaUser } from "react-icons/fa";
-import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiX } from "react-icons/fi";
-import { useSearchParams } from "next/navigation"
-import Pagination from "@/components/Pagination"
-import CreateSectionModal from "@/components/Section/CreateSectionModal"
+import Pagination from "@/app/auth/sections/components/Pagination"
+import Table_Components from '@/app/auth/sections/components/Table';
+import SectionHeader from '@/app/auth/sections/components/SectionsHeader';
 
 // Mock data
 const mockSections = [
@@ -59,7 +55,7 @@ const mockSections = [
   { code: 'RES2026', name: 'Research Methods', enrolled: 32, totalSessions: 8 },
   { code: 'SYS2026', name: 'System Analysis and Design', enrolled: 46, totalSessions: 11 },
   { code: 'EMB2026', name: 'Embedded Systems', enrolled: 31, totalSessions: 9 },
-   { code: 'DSA2026', name: 'Data Structures and Algorithms', enrolled: 42, totalSessions: 12 },
+  { code: 'DSA2026', name: 'Data Structures and Algorithms', enrolled: 42, totalSessions: 12 },
   { code: 'TPR2026', name: 'Technical Programming', enrolled: 38, totalSessions: 10 },
   { code: 'CAL2026', name: 'Calculus 1', enrolled: 55, totalSessions: 14 },
   { code: 'DIP2026', name: 'Digital Image Processing', enrolled: 29, totalSessions: 9 },
@@ -108,42 +104,12 @@ const mockSections = [
   { code: 'EMB2026', name: 'Embedded Systems', enrolled: 31, totalSessions: 9 },
 ]
 
-export default function SectionsPage() {
-  const [sections] = useState(mockSections);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    code: '',
-    name: '',
-    description: '',
-  });
+export default async function SectionsPage({ searchParams }: any) {
+  const { page: rawPage } = await searchParams
 
-  const router = useRouter();
-  // const user = { image: '/path/to/your-avatar.jpg' }; // → thay bằng real user sau
-  const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Gọi API để tạo section mới
-    console.log('Creating section:', formData);
-    // Sau khi tạo thành công → đóng modal + refresh danh sách
-    setIsModalOpen(false);
-    // setFormData({ code: '', name: '', description: '' }); // reset nếu cần
-  };
-
-
-  // =============== Xử lý phân trang
-
-
-  const searchParams = useSearchParams()
-  const page = Number(searchParams.get("page")) || 1
-
+  const page = Math.max(1, Number(rawPage) || 1)
+  console.log(page)
+  console.log("page raw:", searchParams.page)
   function getSections(page: number, limit = 5) {
     const start = (page - 1) * limit
     const end = start + limit
@@ -153,7 +119,9 @@ export default function SectionsPage() {
       totalPages: Math.ceil(mockSections.length / limit),
     }
   }
-  const data = getSections(page, 7) // mỗi page 10 dòng
+
+  const data = getSections(page, 7)
+
   return (
     <div className="min-h-screen bg-gray-50 relative">
       {/* Header */}
@@ -166,71 +134,13 @@ export default function SectionsPage() {
 
       {/* Main content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-          <button
-            onClick={() => router.push('/auth/home')}
-            className="flex items-center gap-2 cu text-gray-700 hover:text-black cursor-pointer text-xl transition"
-          >
-            <FiArrowLeft />
-          </button>
-
-          <button
-            onClick={() => setIsOpen(true)}
-            className="bg-[#09637E] hover:bg-[#085a70] cursor-pointer text-white px-5 py-2.5 rounded-lg font-medium transition shadow-md flex items-center gap-2"
-          >
-            + Create Section
-          </button>
-        </div>
-
+        {/*Section header*/}
+        <SectionHeader />
         {/* Table */}
-        <div className="overflow-x-auto h-106 rounded-lg border border-gray-200 shadow-sm">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-[#09637E] text-white">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Code</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Name</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Student Enrolled</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Total Sessions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {data.items.map((section, index) => (
-                <tr
-                  key={index}
-                  className="bg-teal-50 hover:bg-[#7AB2B2]/30 transition-colors cursor-pointer"
-                  onClick={() => router.push(`/auth/sections/${section.code}`)}
-                >
-                  <td className="px-6 py-4 h-13 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {section.code}
-                  </td>
-                  <td className="px-6 py-4 h-13  whitespace-nowrap text-sm text-gray-700">
-                    {section.name}
-                  </td>
-                  <td className="px-6 py-4 h-13 whitespace-nowrap text-sm text-gray-700">
-                    {section.enrolled}
-                  </td>
-                  <td className="px-6 py-4 h-13 whitespace-nowrap text-sm text-gray-700">
-                    {section.totalSessions}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
+        <Table_Components data={data.items} />
         {/* Pagination (cập nhật màu nút active) */}
         <Pagination totalPages={data.totalPages} />
       </main>
-
-      {/* Modal Create Section */}
-      <CreateSectionModal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        formData={formData}
-        setFormData={setFormData}
-        onSubmit={handleSubmit}
-        loading={loading}
-      />
     </div>
   );
 }

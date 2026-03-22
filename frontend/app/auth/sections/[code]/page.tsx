@@ -76,7 +76,6 @@ export default function SectionDetailPage() {
     }
   }
 
-
   return (
     <div className="min-h-screen bg-[#EBF4F6]">
       {/* Header */}
