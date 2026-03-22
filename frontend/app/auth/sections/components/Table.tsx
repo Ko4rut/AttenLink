@@ -1,7 +1,4 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
-
+import Link from "next/link"
 type section = {
     code: string,
     name: string,
@@ -16,7 +13,6 @@ type Props = {
 
 
 export default function Table_Components({ data }: Props) {
-    const router = useRouter();
     return (
         <div className="overflow-x-auto h-106 rounded-lg border border-gray-200 shadow-sm">
             <table className="min-w-full divide-y divide-gray-200">
@@ -29,25 +25,31 @@ export default function Table_Components({ data }: Props) {
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                    {data.map((items,index) => (
-                        <tr
-                            key={index}
-                            className="bg-teal-50 hover:bg-[#7AB2B2]/30 transition-colors cursor-pointer"
-                            onClick={() => router.push(`/auth/sections/${items.code}`)}
+                    {data.map((items, index) => (
+                        <Link
+                            key={items.code}
+                            href={`/auth/sections/${items.code}`}
+                            className="contents"
                         >
-                            <td className="px-6 py-4 h-13 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {items.code}
-                            </td>
-                            <td className="px-6 py-4 h-13  whitespace-nowrap text-sm text-gray-700">
-                                {items.name}
-                            </td>
-                            <td className="px-6 py-4 h-13 whitespace-nowrap text-sm text-gray-700">
-                                {items.enrolled}
-                            </td>
-                            <td className="px-6 py-4 h-13 whitespace-nowrap text-sm text-gray-700">
-                                {items.totalSessions}
-                            </td>
-                        </tr>
+                            <tr
+                                key={index}
+                                className="bg-white hover:bg-[#7AB2B2]/30 transition-colors cursor-pointer"
+
+                            >
+                                <td className="px-6 py-4 h-13 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {items.code}
+                                </td>
+                                <td className="px-6 py-4 h-13  whitespace-nowrap text-sm text-gray-700">
+                                    {items.name}
+                                </td>
+                                <td className="px-6 py-4 h-13 whitespace-nowrap text-sm text-gray-700">
+                                    {items.enrolled}
+                                </td>
+                                <td className="px-6 py-4 h-13 whitespace-nowrap text-sm text-gray-700">
+                                    {items.totalSessions}
+                                </td>
+                            </tr>
+                        </Link>
                     ))}
                 </tbody>
             </table>
