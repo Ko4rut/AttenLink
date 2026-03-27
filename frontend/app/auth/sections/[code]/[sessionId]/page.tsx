@@ -4,9 +4,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { FaUser } from "react-icons/fa";
 import { FiArrowLeft } from "react-icons/fi";
-import dynamic from 'next/dynamic';
 import { useEffect } from 'react';
-
+import SessionHeader from '../[sessionId]/components/SessionHeader'
 
 
 type AttendanceRecord = {
@@ -17,6 +16,8 @@ type AttendanceRecord = {
   timeCheckIn: string;
 };
 
+
+
 // Mock data – replace with real API fetch later
 const mockAttendance: AttendanceRecord[] = [
   { id: 1, studentCode: "312345678", studentName: "Nguyen Van A", status: "Absent", timeCheckIn: "—" },
@@ -25,10 +26,19 @@ const mockAttendance: AttendanceRecord[] = [
   { id: 4, studentCode: "312345681", studentName: "Le Thi D", status: "Late", timeCheckIn: "April 8 2026 20:48:12" },
   { id: 5, studentCode: "312345682", studentName: "Pham Van E", status: "Present", timeCheckIn: "April 8 2026 20:32:10" },
   // ... add more or fetch from API
+  { id: 6, studentCode: "312345678", studentName: "Nguyen Van A", status: "Absent", timeCheckIn: "—" },
+  { id: 7, studentCode: "312345679", studentName: "Nguyen Thi B", status: "Present", timeCheckIn: "April 8 2026 20:35:20" },
+  { id: 8, studentCode: "312345680", studentName: "Tran Van C", status: "Present", timeCheckIn: "April 8 2026 20:34:55" },
+  { id: 9, studentCode: "312345681", studentName: "Le Thi D", status: "Late", timeCheckIn: "April 8 2026 20:48:12" },
 ];
 
 export default function SessionAttendancePage() {
   const { code } = useParams<{ code: string }>();
+  const { sessionId } = useParams<{ sessionId: string }>();
+
+
+
+
   const router = useRouter();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,21 +60,21 @@ export default function SessionAttendancePage() {
 
 
 
-useEffect(() => {
-  if (!isQRModalOpen) return;
+  useEffect(() => {
+    if (!isQRModalOpen) return;
 
-  const timer = setInterval(() => {
-    setTimeLeft(prev => {
-      if (prev <= 1) {
-        clearInterval(timer);
-        return 0;
-      }
-      return prev - 1;
-    });
-  }, 1000);
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-  return () => clearInterval(timer);
-}, [isQRModalOpen]);
+    return () => clearInterval(timer);
+  }, [isQRModalOpen]);
 
 
   const formatTime = (seconds: number) => {
@@ -85,69 +95,57 @@ useEffect(() => {
 
       <main className="max-w-6xl mx-auto px-4 py-6">
         {/* Back + Export */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-700 hover:text-black text-lg font-medium"
-          >
-            <FiArrowLeft size={20} /> 
-          </button>
-
-          <button className="bg-[#09637E] hover:bg-[#085a70] text-white px-6 py-2.5 rounded-lg font-medium shadow transition flex items-center gap-2">
-            <span>Export CSV</span>
-          </button>
-        </div>
+        <SessionHeader />
 
         {/* Session Info Card */}
         <div className="bg-white rounded-lg shadow-sm border overflow-hidden mb-8">
-<div className="p-6 border-b">
-  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-    
-    {/* LEFT */}
-    <div>
-      <h2 className="text-xl font-bold text-[#09637E]">
-        Session 1 Attendance
-      </h2>
-      <p className="text-sm text-gray-600 mt-1">
-        Data Structure Algorithm - DSA2026
-      </p>
-      <p className="text-sm text-gray-600">
-        Date: April 1, 2025
-      </p>
+          <div className="p-6 border-b">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
 
-      <div className="mt-4 flex flex-wrap gap-6 text-sm text-gray-600">
-        <div>
-          <span className="font-semibold text-gray-600">Present:</span> {present}
-        </div>
-        <div>
-          <span className="font-semibold text-gray-600">Absent:</span> {absent}
-        </div>
-        <div>
-          <span className="font-semibold text-gray-600">Late:</span> {late}
-        </div>
-      </div>
-    </div>
+              {/* LEFT */}
+              <div>
+                <h2 className="text-xl font-bold text-[#09637E]">
+                  Session 1 Attendance
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Data Structure Algorithm - {code}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Date: April 1, 2025
+                </p>
 
-    {/* RIGHT */}
-    <div className="w-full sm:w-80 ">
-      <input
-        type="text"
-        placeholder="Search student name or code..."
-        value={searchTerm}
-        onChange={e => setSearchTerm(e.target.value)}
-        className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-[#09637E] "
-      />
-    </div>
+                <div className="mt-4 flex flex-wrap gap-6 text-sm text-gray-600">
+                  <div>
+                    <span className="font-semibold text-gray-600">Present:</span> {present}
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-600">Absent:</span> {absent}
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-600">Late:</span> {late}
+                  </div>
+                </div>
+              </div>
 
-  </div>
-</div>
+              {/* RIGHT */}
+              <div className="w-full sm:w-80 ">
+                <input
+                  type="text"
+                  placeholder="Search student name or code..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-[#09637E] "
+                />
+              </div>
+            </div>
+          </div>
 
 
           {/* Table Section */}
           <div className="p-6">
 
-            <div className="overflow-x-auto border rounded-lg">
-              <table className="min-w-full divide-y divide-gray-200">
+            <div className="overflow-x-auto border h-84.5 rounded-lg">
+              <table className="min-w-full max-h-10  divide-y divide-gray-200">
                 <thead className="bg-[#088395]">
                   <tr>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-white">#</th>
@@ -157,7 +155,7 @@ useEffect(() => {
                     <th className="px-6 py-3 text-left text-sm font-semibold text-white">Time Check-in</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y max-h-10 overflow-y-scroll  divide-gray-200">
                   {filteredAttendance.map((record) => (
                     <tr key={record.id} className="hover:bg-[#f0f7f7]">
                       <td className="px-6 py-4 text-sm text-gray-900">{record.id}</td>
@@ -165,11 +163,10 @@ useEffect(() => {
                       <td className="px-6 py-4 text-sm text-gray-900">{record.studentName}</td>
                       <td className="px-6 py-4">
                         <span
-                          className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${
-                            record.status === 'Present' ? 'bg-green-100 text-green-800' :
-                            record.status === 'Absent'  ? 'bg-red-100 text-red-800' :
-                            'bg-yellow-100 text-yellow-800'
-                          }`}
+                          className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${record.status === 'Present' ? 'bg-green-100 text-green-800' :
+                              record.status === 'Absent' ? 'bg-red-100 text-red-800' :
+                                'bg-yellow-100 text-yellow-800'
+                            }`}
                         >
                           {record.status}
                         </span>

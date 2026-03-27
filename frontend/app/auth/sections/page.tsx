@@ -106,14 +106,11 @@ const mockSections = [
 
 export default async function SectionsPage({ searchParams }: any) {
   const { page: rawPage } = await searchParams
-
   const page = Math.max(1, Number(rawPage) || 1)
   console.log(page)
-  console.log("page raw:", searchParams.page)
   function getSections(page: number, limit = 5) {
     const start = (page - 1) * limit
-    const end = start + limit
-
+    const end = start + limit    
     return {
       items: mockSections.slice(start, end),
       totalPages: Math.ceil(mockSections.length / limit),

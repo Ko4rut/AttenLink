@@ -7,8 +7,7 @@ import { FiArrowLeft } from "react-icons/fi";
 import { useState } from 'react';
 import { formatSessionTime } from '@/utils/time';
 import QRCodeModal from '@/components/QRCodeModal';
-
-
+import Link from "next/link"
 
 type Session = {
   id: number;
@@ -18,6 +17,7 @@ type Session = {
   qr: string;
   checkin: string;
 };
+
 // Mock data (chỉ để render UI)
 const mockSessions: Session[] = [
   { id: 1, name: "Session 1", time: "April 1 2026 20:30-23", status: "Closed", qr: "Expired", checkin: "42/45" },
@@ -164,9 +164,11 @@ export default function SectionDetailPage() {
                     </td>
 
                     <td className="px-6 py-4">
-                      <button className="text-[#088395] cursor-pointer hover:underline">
+                      <Link className="text-[#088395] cursor-pointer hover:underline"
+                        href={`/auth/sections/${code}/${s.id}`}
+                      >
                         View Attendance
-                      </button>
+                      </Link>
                     </td>
                   </tr>
                 ))}

@@ -62,7 +62,7 @@ export default function Pagination({ totalPages }: Props) {
         <button
           onClick={() => goToPage(currentPage - 1)}
           disabled={currentPage === 1}
-          className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+          className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
         >
           ← Previous
         </button>
@@ -73,7 +73,7 @@ export default function Pagination({ totalPages }: Props) {
               <button
                 key={idx}
                 onClick={() => goToPage(p as number)}
-                className={`px-4 py-2 border rounded-md ${currentPage === p
+                className={`px-4 cursor-pointer py-2 border rounded-md ${currentPage === p
                     ? "bg-black text-white"
                     : "border-gray-300 hover:bg-gray-50"
                   }`}
@@ -87,7 +87,7 @@ export default function Pagination({ totalPages }: Props) {
         <button
           onClick={() => goToPage(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+          className="px-4 py-2 border cursor-pointer border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
         >
           Next →
         </button>
