@@ -5,12 +5,7 @@ from app.core.database import Base
 
 class SectionDB(Base):
     __tablename__ = "Section"
-
-    sectionID = Column(
-        UUID(as_uuid=True), 
-        primary_key=True, 
-        server_default=text("gen_random_uuid()")
-    )
+    sectionID = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     teacherUserID = Column(
         UUID(as_uuid=True), 
         ForeignKey("TeacherProfile.userID"), 
