@@ -7,13 +7,16 @@ from app.schemas.user_schema import UserCreate
 from app.core.security import hash_password
 
 
-def create_user_service(user: UserCreate, db: Session):
+def create_user_service(user: UserCreate,role: str, db: Session):
     try:
+        print("RAW PASSWORD:", repr(user.password))
+        print("BYTE LEN:", len(user.password.encode("utf-8")))
+        
         new_user = UserDB(
             username=user.username,
             password=hash_password(user.password),
             email=user.email,
-            role=user.role,
+            role=role,
             fullName=user.fullName,
         )
 

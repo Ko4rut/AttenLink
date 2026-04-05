@@ -12,7 +12,7 @@ from app.core.security import verify_password, create_access_token
 def create_teacher_service(teacher: TeacherCreate, db: Session):
     try:
         with db.begin():
-            new_user = create_user_service(teacher, db)
+            new_user = create_user_service(teacher,"Teacher", db)
 
             new_teacher = TeacherProfileDB(
                 userID=new_user.userID
@@ -69,7 +69,7 @@ def login_teacher_service(username: str, password: str, db: Session):
     )
     
     create_audit_log_service(
-        userID=username,
+        userID=user.userID,
         action="login",
         db=db
     )

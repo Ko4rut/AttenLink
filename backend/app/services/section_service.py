@@ -5,6 +5,7 @@ from app.schemas.section import SectionCreate
 class SectionService:
     @staticmethod
     def create_section(db: Session, section_data: SectionCreate):
+    
         # Khởi tạo object model từ schema
         new_section = SectionDB(
             teacherUserID=section_data.teacherUserID,

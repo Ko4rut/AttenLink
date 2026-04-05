@@ -9,4 +9,5 @@ class TeacherProfileDB(Base):
     userID = Column(UUID(as_uuid=True),  ForeignKey("User.userID"), primary_key=True)
     isDeleted = Column(Boolean, default=False)
 
+    sections = relationship("SectionDB", back_populates="teacher_profile")
     user = relationship("UserDB", back_populates="teacher_profile")

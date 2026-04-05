@@ -9,7 +9,7 @@ from app.core.database import Base
 class AuditLogDB(Base):
     __tablename__ = "AuditLog"
 
-    auditLogID = Column(
+    AuditLogID = Column(
         UUID(as_uuid=True),
         primary_key=True,
         server_default=text("gen_random_uuid()")
