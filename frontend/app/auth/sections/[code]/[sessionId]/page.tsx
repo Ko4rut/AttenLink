@@ -20,7 +20,7 @@ type AttendanceRecord = {
 
 // Mock data – replace with real API fetch later
 const mockAttendance: AttendanceRecord[] = [
-  { id: 1, studentCode: "312345678", studentName: "Nguyen Van A", status: "Absent", timeCheckIn: "—" },
+  { id: 1, studentCode: "312345678", studentName: "Nguyen Van A", status: "Present", timeCheckIn: "—" },
   { id: 2, studentCode: "312345679", studentName: "Nguyen Thi B", status: "Present", timeCheckIn: "April 8 2026 20:35:20" },
   { id: 3, studentCode: "312345680", studentName: "Tran Van C", status: "Present", timeCheckIn: "April 8 2026 20:34:55" },
   { id: 4, studentCode: "312345681", studentName: "Le Thi D", status: "Late", timeCheckIn: "April 8 2026 20:48:12" },

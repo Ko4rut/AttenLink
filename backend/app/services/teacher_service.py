@@ -67,7 +67,12 @@ def login_teacher_service(username: str, password: str, db: Session):
             "role": user.role
         }
     )
-
+    
+    create_audit_log_service(
+        userID=username,
+        action="login",
+        db=db
+    )
     return {
         "access_token": access_token,
         "token_type": "bearer",
