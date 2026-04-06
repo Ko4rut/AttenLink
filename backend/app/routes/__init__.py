@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from app.routes.teacher_routes import router as teacher_router
 from app.routes.student_routes import router as student_router
-from app.routes.section_router import router as section_router
+from app.routes.section_routes import router as section_router
 
 api_router = APIRouter()
 
