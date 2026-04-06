@@ -13,7 +13,7 @@ class SectionDB(Base):
     teacherUserID = Column(UUID(as_uuid=True), ForeignKey("TeacherProfile.userID"), nullable=False)
     code = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=False)
-    Discription = Column(String, nullable=True)
+    description = Column(String, nullable=True)
     isDeleted = Column(Boolean, default=False)
 
     teacher = relationship(

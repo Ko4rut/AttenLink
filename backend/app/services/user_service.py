@@ -9,9 +9,6 @@ from app.core.security import hash_password
 
 def create_user_service(user: UserCreate,role: str, db: Session):
     try:
-        print("RAW PASSWORD:", repr(user.password))
-        print("BYTE LEN:", len(user.password.encode("utf-8")))
-        
         new_user = UserDB(
             username=user.username,
             password=hash_password(user.password),

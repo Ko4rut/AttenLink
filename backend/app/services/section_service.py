@@ -14,7 +14,7 @@ def create_section_service(section: SectionCreate, teacher_user_id: UUID, db: Se
                 teacherUserID=teacher_user_id,
                 code=section.code,
                 name=section.name,
-                Discription=section.Discription,
+                description=section.description
             )
             db.add(new_section)
             db.flush()

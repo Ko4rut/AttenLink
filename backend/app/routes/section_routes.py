@@ -31,7 +31,9 @@ def create_section(
 
 @router.get("", response_model=list[SectionResponse], status_code=status.HTTP_200_OK)
 def get_all_sections(db: Session = Depends(get_db)):
-    return get_all_sections_service(db=db)
+    sections = get_all_sections_service(db=db)
+    return sections
+
 
 
 @router.get("/{section_id}", response_model=SectionResponse, status_code=status.HTTP_200_OK)

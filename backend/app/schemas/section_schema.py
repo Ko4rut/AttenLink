@@ -5,7 +5,7 @@ from uuid import UUID
 class SectionBase(BaseModel):
     code: str
     name: str
-    Discription: str | None = None
+    description: str | None = None
 
 
 class SectionCreate(SectionBase):
@@ -21,6 +21,6 @@ class SectionResponse(SectionBase):
     SectionID: UUID
     teacherUserID: UUID
     isDeleted: bool
-
+    
     class Config:
         from_attributes = True

@@ -5,13 +5,14 @@ from app.models.student_profile_model import StudentProfileDB
 from app.schemas.user_schema import StudentCreate
 from app.services.user_service import create_user_service
 from app.services.auditlog_service import create_audit_log_service
-
+from app.models.user_model import UserDB
+from app.core.security import verify_password, create_access_token
 
 def create_student_service(student: StudentCreate, db: Session):
     try:
         with db.begin():
-            new_user = create_user_service(student, db)
-
+            new_user = create_user_service(student,"student", db)
+ 
             new_student = StudentProfileDB(
                 userID=new_user.userID
             )
@@ -34,3 +35,45 @@ def create_student_service(student: StudentCreate, db: Session):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Create student failed: {str(e)}"
         )
+
+def login_student_service(username: str, password: str, db: Session):
+    user = db.query(UserDB).filter(UserDB.username == username and UserDB.isDeleted==False).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password"
+        )
+
+    if user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account is not a student account"
+        )
+
+    if not verify_password(password, user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password"
+        )
+
+    access_token = create_access_token(
+        data={
+            "sub": user.username,
+            "userID": str(user.userID),
+            "role": user.role
+        }
+    )
+    
+    create_audit_log_service(
+        userID=user.userID,
+        action="login",
+        db=db
+    )
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "userID": str(user.userID),
+        "username": user.username,
+        "role": user.role
+    }
