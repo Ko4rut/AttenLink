@@ -12,7 +12,7 @@ from app.core.security import verify_password, create_access_token
 def create_teacher_service(teacher: TeacherCreate, db: Session):
     try:
         with db.begin():
-            new_user = create_user_service(teacher,"Teacher", db)
+            new_user = create_user_service(teacher,"teacher", db)
 
             new_teacher = TeacherProfileDB(
                 userID=new_user.userID

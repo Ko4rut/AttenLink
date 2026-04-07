@@ -4,29 +4,48 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { loginTeacher } from '@/services/auth.api';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // hardcode login
-    if (email === 'admin' && password === 'admin123') {
+    try {
+      setLoading(true);
+
+      const res = await loginTeacher({
+        username,
+        password,
+      });
+
+      localStorage.setItem('access_token', res.access_token);
+      localStorage.setItem('user_role', res.role);
+      localStorage.setItem('username', res.username);
+      localStorage.setItem('user_id', res.userID);
+
       router.push('/auth/home');
-    } else {
-      alert('Sai tài khoản hoặc mật khẩu');
+    } catch (error: any) {
+      const detail = error?.response?.data?.detail;
+
+      if (Array.isArray(detail)) {
+        alert(detail.map((item: any) => item.msg).join("\n"));
+      } else {
+        alert(detail || "Đăng nhập thất bại");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#EBF4F6] flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-8">
-        
-        {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div className="relative w-16 h-16 bg-[#09637E] rounded-full mb-4 overflow-hidden">
             <Image
@@ -35,31 +54,29 @@ export default function LoginPage() {
               fill
               className="object-cover"
               priority
+              sizes="64px"
             />
           </div>
+
           <h1 className="text-2xl font-bold text-gray-900">AttenLink</h1>
           <p className="text-gray-500 mt-1">Login to your account</p>
         </div>
 
-        {/* Form */}
         <form className="space-y-6" onSubmit={handleSubmit}>
-          
-          {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+              Username
             </label>
             <input
               type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
               className="block w-full rounded-lg border border-gray-300 px-4 py-3"
               placeholder="admin"
             />
           </div>
 
-          {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Password
@@ -83,12 +100,12 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Button */}
           <button
             type="submit"
-            className="w-full bg-[#09637E] text-white py-3 rounded-lg"
+            disabled={loading}
+            className="w-full bg-[#09637E] text-white py-3 rounded-lg disabled:opacity-50"
           >
-            Login
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
       </div>
