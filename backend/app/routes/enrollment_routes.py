@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.dependencies.role import get_current_student  # trả về StudentProfileDB
+from app.dependencies.auth import get_current_student  # trả về StudentProfileDB
 from app.schemas.enrollment_schema import EnrollmentJoinRequest, EnrollmentResponse
 from app.services.enrollment_service import join_section
 

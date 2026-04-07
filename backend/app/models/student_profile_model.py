@@ -15,3 +15,8 @@ class StudentProfileDB(Base):
         "UserDB",
         back_populates="student_profile"
     )
+
+    enrollments = relationship(
+        "EnrollmentDB",
+        back_populates="student"
+    )

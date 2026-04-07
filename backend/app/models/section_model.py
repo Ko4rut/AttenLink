@@ -20,3 +20,8 @@ class SectionDB(Base):
         "TeacherProfileDB",
         back_populates="sections"
     )
+    
+    enrollments = relationship(
+        "EnrollmentDB",
+        back_populates="section"
+    )
