@@ -18,20 +18,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#088395] flex flex-col items-center justify-center px-6 py-12">
+    <div className="min-h-screen bg-[#7AB2B2] flex flex-col items-center justify-center px-6 py-12">
       {/* Logo + App Name */}
       <div className="flex flex-col items-center mb-10">
         {/* Logo máy bay giấy cam */}
         <div className="mb-4">
-  <img 
-    src="/img/paper-plane.png"
-    alt="paper plane"
-    className="w-32 h-32 mx-auto"
-  />
-</div>
+          <img
+            src="/img/paper-plane.png"
+            alt="paper plane"
+            className="w-32 h-32 mx-auto"
+          />
+        </div>
 
         {/* Hoặc dùng image: <Image src="/paper-plane-orange.svg" alt="AttenLink Logo" width={120} height={120} /> */}
-        
+
         <h1 className="text-4xl font-bold text-white tracking-wide">AttenLink</h1>
       </div>
 
