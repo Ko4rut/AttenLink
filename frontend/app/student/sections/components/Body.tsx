@@ -14,6 +14,8 @@ export default function SectionsBody({
   sections = [
     { code: 'DSA2016', name: 'Data Structure Algorithms', sessions: 5 },
     { code: 'CAL2016', name: 'Calculus 1', sessions: 8 },
+    { code: 'CAL2012', name: 'Calculus 1', sessions: 8 },
+     { code: 'CAL2016232323', name: 'Calculus 1', sessions: 8 },
   ],
 }: SectionsBodyProps) {
   return (
@@ -31,7 +33,7 @@ export default function SectionsBody({
       </div>
 
       {/* Section list */}
-      <div className="space-y-7">
+      <div className="space-y-7 overflow-y-scroll max-h-125">
         {sections.map((section) => (
           <div
             key={section.code}

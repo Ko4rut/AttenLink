@@ -15,6 +15,11 @@ export default function SectionPage() {
     router.push('/');
   };
 
+  const handleJoinSection = async (code: string) => {
+    // call api join section
+  };
+
+
   return (
     <div className="min-h-screen bg-[#D9E0E3] flex justify-between flex-col">
       <Header onLogout={handleLogout} />
