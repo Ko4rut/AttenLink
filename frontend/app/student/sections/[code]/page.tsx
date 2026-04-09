@@ -1,9 +1,9 @@
 'use client';
 
 import {useParams} from 'next/navigation';
-import Header from '@/app/student/sections/components/Header';
-import Body from '@/app/student/sections/[code]/components/Body';
-import Footer from '@/app/student/sections/[code]/components/Footer';
+import Header from '@/app/student/sections/components/SectionHeader';
+import Body from '@/app/student/sections/[code]/components/SessionBody';
+import Footer from '@/app/student/sections/[code]/components/SessionFooter';
 
 
 

@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '@/app/student/sections/components/Header';
-import Body from '@/app/student/sections/components/Body';
-import Footer from '@/app/student/sections/components/Footer';
+import Header from '@/app/student/sections/components/SectionHeader';
+import Body from '@/app/student/sections/components/SectionBody';
+import Footer from '@/app/student/sections/components/SectionFooter';
 import JoinSectionModal from '@/app/student/sections/components/JoinSectionModal';
 
 export default function SectionPage() {
