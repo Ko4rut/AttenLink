@@ -19,6 +19,35 @@ export default function Body({ onScanSuccess }: ScanQrBodyProps) {
 
         const startScanner = async () => {
             try {
+                // Ưu tiên mở camera sau trước
+                try {
+                    await html5QrCode.start(
+                        { facingMode: 'environment' },
+                        {
+                            fps: 10,
+                            qrbox: { width: 220, height: 220 },
+                            aspectRatio: 1,
+                        },
+                        async (decodedText) => {
+                            if (!mounted) return;
+
+                            setScanResult(decodedText);
+                            onScanSuccess?.(decodedText);
+
+                            try {
+                                await html5QrCode.stop();
+                            } catch { }
+
+                            setScannerVisible(false);
+                        },
+                        () => { }
+                    );
+
+                    return;
+                } catch {
+                    // nếu facingMode không chạy được thì fallback xuống dưới
+                }
+
                 const cameras = await Html5Qrcode.getCameras();
 
                 if (!cameras || cameras.length === 0) {
@@ -40,7 +69,7 @@ export default function Body({ onScanSuccess }: ScanQrBodyProps) {
                     }
                 }
 
-                const cameraId = backCameraId || cameras[0].id;
+                const cameraId = backCameraId || cameras[cameras.length - 1].id;
 
                 await html5QrCode.start(
                     cameraId,
@@ -58,6 +87,7 @@ export default function Body({ onScanSuccess }: ScanQrBodyProps) {
                         try {
                             await html5QrCode.stop();
                         } catch { }
+
                         setScannerVisible(false);
                     },
                     () => { }
