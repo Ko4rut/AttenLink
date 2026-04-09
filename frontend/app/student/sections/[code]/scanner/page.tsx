@@ -2,7 +2,7 @@
 
 import { ScanQrCode } from "lucide-react";
 import Header from "../../components/Header"
-import Body from "./components/body"
+import Body from "./components/Body"
 
 export default function ScanerPage() {
     const handleLogout = () => {
