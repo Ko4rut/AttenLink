@@ -12,10 +12,10 @@ type SectionsBodyProps = {
 
 export default function SectionsBody({
   sections = [
-    { code: 'DSA2016', name: 'Data Structure Algorithms', sessions: 5 },
+    { code: 'DSA2016', name: 'Data Structure Algorithm', sessions: 5 },
     { code: 'CAL2016', name: 'Calculus 1', sessions: 8 },
     { code: 'CAL2012', name: 'Calculus 1', sessions: 8 },
-     { code: 'CAL2016232323', name: 'Calculus 1', sessions: 8 },
+    { code: 'CAL2014', name: 'Calculus 1', sessions: 8 },
   ],
 }: SectionsBodyProps) {
   return (
@@ -37,14 +37,17 @@ export default function SectionsBody({
         {sections.map((section) => (
           <div
             key={section.code}
+            onClick={() => {
+              window.location.href = `${window.location.pathname}/${section.code}`;
+            }}
             className="flex items-center justify-between rounded-2xl bg-[#0F8A9D] px-4 py-4"
           >
-            <div className="flex min-w-0 items-center gap-6">
-              <span className="whitespace-nowrap text-[18px] font-extrabold text-white">
+            <div className="flex min-w-0 w-full items-center gap-6">
+              <span className="whitespace-nowrap text-[18px] font-bold text-white">
                 {section.code}
               </span>
 
-              <div className="min-w-0">
+              <div className="min-w-0  items-end w-full">
                 <p className="truncate text-[18px] font-bold text-white">
                   {section.name}
                 </p>
