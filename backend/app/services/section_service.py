@@ -64,6 +64,19 @@ def get_section_by_id_service(section_id: UUID, db: Session):
 
     return section
 
+def get_section_by_teacher_id(teacher_user_id: UUID, db: Session):
+    section = db.query(SectionDB).filter(
+        SectionDB.teacherUserID == teacher_user_id,   # ← Sửa thành teacherUserID
+        SectionDB.isDeleted == False
+    ).first()
+
+    if not section:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Section not found for this teacher"
+        )
+
+    return section
 
 def update_section_service(section_id: UUID, section_update: SectionUpdate, teacher_user_id: UUID, db: Session):
     try:
@@ -81,8 +94,8 @@ def update_section_service(section_id: UUID, section_update: SectionUpdate, teac
 
             if section_update.name is not None:
                 section.name = section_update.name
-            if section_update.Discription is not None:
-                section.Discription = section_update.Discription
+            if section_update.description is not None:
+                section.description = section_update.description
 
             db.flush()
 
@@ -137,3 +150,49 @@ def delete_section_service(section_id: UUID, teacher_user_id: UUID, db: Session)
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Delete section failed: {str(e)}"
         )
+    
+def soft_delete_section_service(
+    section_id: UUID, 
+    teacher_user_id: UUID, 
+    db: Session
+):
+    try:
+        with db.begin():
+            section = db.query(SectionDB).filter(
+                SectionDB.SectionID == section_id,
+                SectionDB.isDeleted == False
+            ).first()
+
+            if not section:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Section not found or already deleted"
+                )
+
+            # Kiểm tra quyền (chỉ teacher sở hữu mới được xóa)
+            if section.teacherUserID != teacher_user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You don't have permission to delete this section"
+                )
+
+            section.isDeleted = True
+            db.flush()
+
+            # Ghi audit log
+            create_audit_log_service(
+                userID=teacher_user_id,
+                action="SOFT_DELETE_SECTION",
+                db=db
+            )
+
+        db.refresh(section)
+        return section
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Soft delete section failed: {str(e)}"
+        )    

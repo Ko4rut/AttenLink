@@ -10,6 +10,8 @@ from app.services.section_service import (
     get_section_by_id_service,
     update_section_service,
     delete_section_service,
+    get_section_by_teacher_id,
+    soft_delete_section_service,
 )
 
 router = APIRouter(prefix="/sections", tags=["Sections"])
@@ -43,6 +45,9 @@ def get_section_by_id(
 ):
     return get_section_by_id_service(section_id=section_id, db=db)
 
+@router.get("/teacher/{teacher_user_id}", response_model=SectionResponse)  # ← Thêm prefix /teacher/
+def get_section_by_teacher(teacher_user_id: UUID, db: Session = Depends(get_db)):
+    return get_section_by_teacher_id(teacher_user_id=teacher_user_id, db=db)
 
 @router.put("/{section_id}", response_model=SectionResponse, status_code=status.HTTP_200_OK)
 def update_section(
@@ -66,6 +71,17 @@ def delete_section(
     db: Session = Depends(get_db)
 ):
     return delete_section_service(
+        section_id=section_id,
+        teacher_user_id=teacher_user_id,
+        db=db
+    )
+@router.patch("/{section_id}/delete", response_model=SectionResponse, status_code=status.HTTP_200_OK)
+def soft_delete_section(
+    section_id: UUID,
+    teacher_user_id: UUID,           # Để kiểm tra quyền
+    db: Session = Depends(get_db)
+):
+    return soft_delete_section_service(
         section_id=section_id,
         teacher_user_id=teacher_user_id,
         db=db

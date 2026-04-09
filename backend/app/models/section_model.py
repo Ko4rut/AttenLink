@@ -25,3 +25,7 @@ class SectionDB(Base):
         "EnrollmentDB",
         back_populates="section"
     )
+    sessions = relationship(
+        "SessionDB",
+        back_populates="section",     
+    )

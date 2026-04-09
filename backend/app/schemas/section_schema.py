@@ -14,7 +14,7 @@ class SectionCreate(SectionBase):
 
 class SectionUpdate(BaseModel):
     name: str | None = None
-    Discription: str | None = None
+    description: str | None = None
 
 
 class SectionResponse(SectionBase):
