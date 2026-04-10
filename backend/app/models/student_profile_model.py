@@ -20,3 +20,7 @@ class StudentProfileDB(Base):
         "EnrollmentDB",
         back_populates="student"
     )
+    attendance_records  = relationship(
+    "AttendanceRecordDB",
+    back_populates="student"
+    )

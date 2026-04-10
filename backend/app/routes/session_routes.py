@@ -3,13 +3,16 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 
 from app.core.database import get_db
-from app.schemas.session_schema import SessionCreate, SessionUpdate, SessionResponse
+from app.schemas.session_schema import SessionCreate, SessionUpdate, SessionResponse, QRCodeResponse,QRCodeRevokeResponse
 from app.services.session_service import (
     create_session_service,
     get_sessions_by_section_service,
     get_session_by_id_service,
     update_session_service,
     generate_qr_token_service,
+    get_current_qrcode_service,
+    
+
 )
 
 router = APIRouter(prefix="/sessions", tags=["Sessions"])
@@ -66,6 +69,28 @@ def update_session(
     return update_session_service(
         session_id=session_id,
         session_update=session_update,
+        teacher_user_id=teacher_user_id,
+        db=db
+    )
+
+# ==================== GET CURRENT QR CODE ====================
+@router.get("/{session_id}/qrcode/current", response_model=QRCodeResponse)
+def get_current_qrcode(
+    session_id: UUID,
+    db: Session = Depends(get_db)
+):
+    return get_current_qrcode_service(session_id=session_id, db=db)
+
+
+# ==================== REVOKE QR CODE ====================
+@router.patch("/qrcode/{qr_token_id}/revoke", response_model=QRCodeRevokeResponse)
+def revoke_qrcode(
+    qr_token_id: UUID,
+    teacher_user_id: UUID,          # Để check quyền
+    db: Session = Depends(get_db)
+):
+    return QRCodeRevokeResponse(
+        qr_token_id=qr_token_id,
         teacher_user_id=teacher_user_id,
         db=db
     )

@@ -16,3 +16,4 @@ class EnrollmentDB(Base):
 
     student = relationship("StudentProfileDB", back_populates="enrollments")
     section = relationship("SectionDB", back_populates="enrollments")
+    

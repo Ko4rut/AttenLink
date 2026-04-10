@@ -20,3 +20,9 @@ class SessionDB(Base):
     # Relationship
     section = relationship("SectionDB", back_populates="sessions")
     # attendances = relationship("AttendanceDB", back_populates="session")  # sau này 
+    # Trong session_model.py
+    qrcodes = relationship("QRCodeDB", back_populates="session")
+    attendance_records  = relationship(
+    "AttendanceRecordDB",
+    back_populates="session"
+    )

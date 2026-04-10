@@ -1,7 +1,9 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timedelta
+import uuid
+from app.models.qrcode_model import QRCodeDB
 
 from app.models.session_model import SessionDB
 from app.models.section_model import SectionDB
@@ -151,6 +153,8 @@ def update_session_service(
 
 
 # ====================== GENERATE QR CODE TOKEN ======================
+
+
 def generate_qr_token_service(
     session_id: UUID,
     teacher_user_id: UUID,
@@ -163,24 +167,25 @@ def generate_qr_token_service(
         ).first()
 
         if not session:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Session not found"
-            )
+            raise HTTPException(status_code=404, detail="Session not found")
 
-        # Check quyền
+        # Check quyền teacher
         section = db.query(SectionDB).filter(SectionDB.SectionID == session.SectionID).first()
         if section and section.teacherUserID != teacher_user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to generate QR for this session"
-            )
+            raise HTTPException(status_code=403, detail="No permission")
 
-        # Tạo token QR (có thể dùng UUID hoặc JWT sau này)
-        import uuid
-        session.qrToken = str(uuid.uuid4())
-        session.isActive = True
+        # Tạo QR Code mới
+        token = str(uuid.uuid4())
+        expire_at = datetime.utcnow() + timedelta(minutes=15)  # ví dụ 15 phút
 
+        new_qrcode = QRCodeDB(
+            SessionID=session_id,
+            token=token,
+            expireAt=expire_at,
+            isActive=True
+        )
+
+        db.add(new_qrcode)
         db.flush()
 
         create_audit_log_service(
@@ -189,13 +194,98 @@ def generate_qr_token_service(
             db=db
         )
 
-        db.refresh(session)
-        return session
+        db.commit()
+        db.refresh(new_qrcode)
+
+        # Trả về cả session + qrcode info nếu cần
+        return {
+            "session": session,
+            "qrcode": {
+                "QRTokenID": new_qrcode.QRTokenID,
+                "token": new_qrcode.token,
+                "expireAt": new_qrcode.expireAt
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Generate QR failed: {str(e)}")
+    
+# ====================== GET CURRENT ACTIVE QR CODE ======================
+def get_current_qrcode_service(session_id: UUID, db: Session):
+    try:
+        # Lấy QRCode active nhất, chưa expire
+        qrcode = db.query(QRCodeDB).filter(
+            QRCodeDB.SessionID == session_id,
+            QRCodeDB.isActive == True,
+            QRCodeDB.expireAt > datetime.utcnow()
+        ).order_by(QRCodeDB.createAt.desc()).first()
+
+        if not qrcode:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No active QR code found for this session"
+            )
+
+        return qrcode
 
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Generate QR token failed: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Get current QR code failed: {str(e)}"
         )
+
+
+# ====================== REVOKE QR CODE ======================
+def revoke_qrcode_service(qr_token_id: UUID, teacher_user_id: UUID, db: Session):
+    try:
+        qrcode = db.query(QRCodeDB).filter(
+            QRCodeDB.QRTokenID == qr_token_id
+        ).first()
+
+        if not qrcode:
+            raise HTTPException(status_code=404, detail="QR Code not found")
+
+        # Check quyền teacher qua session
+        session = db.query(SessionDB).filter(
+            SessionDB.SessionID == qrcode.SessionID,
+            SessionDB.isDeleted == False
+        ).first()
+
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        section = db.query(SectionDB).filter(
+            SectionDB.SectionID == session.SectionID
+        ).first()
+
+        if section and section.teacherUserID != teacher_user_id:
+            raise HTTPException(status_code=403, detail="No permission")
+
+        qrcode.isActive = False
+        db.commit()
+        create_audit_log_service(
+            userID=teacher_user_id,
+            action="REVOKE_QR_CODE",
+            db=db
+        )
+
+        db.commit()
+        db.refresh(qrcode)
+
+        return {
+            "QRTokenID": qrcode.QRTokenID,
+            "isActive": qrcode.isActive,
+            "message": "QR Code has been revoked successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        print("ERROR:", str(e))  # thêm dòng này
+        raise HTTPException(status_code=400, detail=f"Revoke QR failed: {str(e)}")

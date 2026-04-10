@@ -26,3 +26,22 @@ class SessionResponse(SessionBase):
 
     class Config:
         from_attributes = True
+
+
+
+
+class QRCodeResponse(BaseModel):
+    QRTokenID: UUID
+    token: str
+    expireAt: datetime
+    isActive: bool
+    createAt: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class QRCodeRevokeResponse(BaseModel):
+    QRTokenID: UUID
+    isActive: bool
+    message: str 
