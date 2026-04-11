@@ -5,6 +5,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { loginTeacher } from '@/services/auth.api';
+import { saveAuth } from '@/lib/auth';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -28,6 +29,12 @@ export default function LoginPage() {
       localStorage.setItem('user_role', res.role);
       localStorage.setItem('username', res.username);
       localStorage.setItem('user_id', res.userID);
+      const auth = {
+        userID: res.userID,
+        access_token: res.access_token,
+      };
+
+      saveAuth(auth);
 
       router.push('/auth/home');
     } catch (error: any) {

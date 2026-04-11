@@ -1,10 +1,14 @@
+from math import ceil
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from uuid import UUID
 
 from app.models.section_model import SectionDB
 from app.schemas.section_schema import SectionCreate, SectionUpdate
 from app.services.auditlog_service import create_audit_log_service
+from app.models.enrollment_model import EnrollmentDB
+from app.models.session_model import SessionDB
 
 
 def create_section_service(section: SectionCreate, teacher_user_id: UUID, db: Session):
@@ -64,19 +68,69 @@ def get_section_by_id_service(section_id: UUID, db: Session):
 
     return section
 
-def get_section_by_teacher_id(teacher_user_id: UUID, db: Session):
-    section = db.query(SectionDB).filter(
-        SectionDB.teacherUserID == teacher_user_id,   # ← Sửa thành teacherUserID
+
+def get_sections_by_teacher_id(
+    teacher_user_id: UUID,
+    page: int,
+    limit: int,
+    db: Session
+):
+    base_query = db.query(SectionDB).filter(
+        SectionDB.teacherUserID == teacher_user_id,
         SectionDB.isDeleted == False
-    ).first()
+    )
 
-    if not section:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Section not found for this teacher"
-        )
+    total = base_query.count()
 
-    return section
+    if total == 0:
+        return {
+            "items": [],
+            "page": page,
+            "limit": limit,
+            "total": 0,
+            "totalPages": 0
+        }
+
+    offset = (page - 1) * limit
+
+    sections = (
+        base_query
+        .order_by(SectionDB.name.asc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    items = []
+
+    for section in sections:
+        enrolled_count = db.query(func.count(EnrollmentDB.EnrollmentID)).filter(
+            EnrollmentDB.SectionID == section.SectionID,
+            EnrollmentDB.isDeleted == False
+        ).scalar()
+
+        total_sessions = db.query(func.count(SessionDB.SessionID)).filter(
+            SessionDB.SectionID == section.SectionID,
+            SessionDB.isDeleted == False
+        ).scalar()
+
+        items.append({
+            "SectionID": section.SectionID,
+            "code": section.code,
+            "name": section.name,
+            "enrolled": enrolled_count or 0,
+            "totalSessions": total_sessions or 0
+        })
+
+    total_pages = ceil(total / limit)
+
+    return {
+        "items": items,
+        "page": page,
+        "limit": limit,
+        "total": total,
+        "totalPages": total_pages
+    }
 
 def update_section_service(section_id: UUID, section_update: SectionUpdate, teacher_user_id: UUID, db: Session):
     try:

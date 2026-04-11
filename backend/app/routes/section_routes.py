@@ -1,16 +1,16 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 from uuid import UUID
 
 from app.core.database import get_db
-from app.schemas.section_schema import SectionCreate, SectionUpdate, SectionResponse
+from app.schemas.section_schema import SectionCreate, SectionUpdate, SectionResponse, SectionListResponse
 from app.services.section_service import (
     create_section_service,
     get_all_sections_service,
     get_section_by_id_service,
     update_section_service,
     delete_section_service,
-    get_section_by_teacher_id,
+    get_sections_by_teacher_id,
     soft_delete_section_service,
 )
 
@@ -45,9 +45,19 @@ def get_section_by_id(
 ):
     return get_section_by_id_service(section_id=section_id, db=db)
 
-@router.get("/teacher/{teacher_user_id}", response_model=SectionResponse)  # ← Thêm prefix /teacher/
-def get_section_by_teacher(teacher_user_id: UUID, db: Session = Depends(get_db)):
-    return get_section_by_teacher_id(teacher_user_id=teacher_user_id, db=db)
+@router.get("/teacher/{teacher_user_id}", response_model=SectionListResponse)
+def get_sections_by_teacher(
+    teacher_user_id: UUID,
+    page: int = Query(1, ge=1),
+    limit: int = Query(7, ge=1, le=100) ,
+    db: Session = Depends(get_db)
+):
+    return get_sections_by_teacher_id(
+        teacher_user_id=teacher_user_id,
+        page=page,
+        limit=limit,
+        db=db
+    )
 
 @router.put("/{section_id}", response_model=SectionResponse, status_code=status.HTTP_200_OK)
 def update_section(

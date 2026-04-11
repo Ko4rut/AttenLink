@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function useAuthGuard(redirectTo = '/login') {
+export default function useAuthGuard(redirectTo = '/student/login') {
   const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
     const accessToken = localStorage.getItem('access_token');
@@ -12,6 +13,11 @@ export default function useAuthGuard(redirectTo = '/login') {
 
     if (!accessToken || !userId) {
       router.replace(redirectTo);
+      return;
     }
+
+    setAuthorized(true);
   }, [router, redirectTo]);
+
+  return authorized;
 }

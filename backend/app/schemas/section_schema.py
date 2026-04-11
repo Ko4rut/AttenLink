@@ -24,3 +24,16 @@ class SectionResponse(SectionBase):
     
     class Config:
         from_attributes = True
+
+class SectionListItem(BaseModel):
+    code: str
+    name: str
+    enrolled: int
+    totalSessions: int
+
+class SectionListResponse(BaseModel):
+    items: list[SectionListItem]
+    page: int
+    limit: int
+    total: int
+    totalPages: int
