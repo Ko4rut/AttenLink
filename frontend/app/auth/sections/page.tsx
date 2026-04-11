@@ -5,7 +5,7 @@ import { FaUser } from "react-icons/fa";
 import Pagination from "@/app/auth/sections/components/Pagination";
 import Table_Components from '@/app/auth/sections/components/Table';
 import SectionHeader from '@/app/auth/sections/components/SectionsHeader';
-import { getSectionsByTeacher, type Section } from '@/services/get.section.api';
+import { getSectionsByTeacher, type Section } from '@/services/section.api';
 
 export default function SectionsPage() {
   const [sections, setSections] = useState<Section[]>([]);

@@ -1,84 +1,102 @@
 'use client';
 
-import { useParams } from 'next/navigation';
-import { FaUser } from "react-icons/fa";
+import { useParams, useSearchParams } from 'next/navigation';
+import { FaUser } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
-import { FiArrowLeft } from "react-icons/fi";
-import { useState } from 'react';
-import { formatSessionTime } from '@/utils/time';
-import QRCodeModal from '@/components/QRCodeModal';
-import Link from "next/link"
-
-type Session = {
-  id: number;
-  name: string;
-  time: string;
-  status: "Active" | "Closed";
-  qr: string;
-  checkin: string;
-};
-
-// Mock data (chỉ để render UI)
-const mockSessions: Session[] = [
-  { id: 1, name: "Session 1", time: "April 1 2026 20:30-23", status: "Closed", qr: "Expired", checkin: "42/45" },
-  { id: 2, name: "Session 2", time: "April 15 2026 20:32-10", status: "Closed", qr: "Expired", checkin: "44/45" },
-  { id: 3, name: "Session 3", time: "April 22 2026 20:39-20", status: "Active", qr: "Generate QR", checkin: "44/45" },
-];
-
+import { FiArrowLeft } from 'react-icons/fi';
+import { useEffect, useState } from 'react';
+import { QRCodeModal, type CurrentQRCode } from '@/components/QRCodeModal';
+import Link from 'next/link';
+import { sessionApi, type SessionItem } from '@/services/session.api';
+import { qrCodeApi } from "@/services/qrcode.api";
+import axios from 'axios';
 
 export default function SectionDetailPage() {
-  const { code } = useParams();
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const sectionId = params.code as string;
+  const code = searchParams.get('code') as string;
+  // console.log('Section Detail Page - code:', code, 'sectionId:', sectionId);
   const router = useRouter();
-  const [sessions, setSessions] = useState(mockSessions)
-  const [openQR, setOpenQR] = useState(false)
-  const [selectedSession, setSelectedSession] = useState<number | null>(null)
 
+  const [sessions, setSessions] = useState<SessionItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [openQR, setOpenQR] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [SelectedSessionId, setSelectedSessionId] = useState("");
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [currentQRCode, setCurrentQRCode] = useState<CurrentQRCode | null>(null);
 
-  function toggle_status(sessionId: number) {
-    setSessions(prev =>
-      prev.map(session =>
-        session.id === sessionId
-          ? {
-            ...session,
-            status: session.status === "Active" ? "Closed" : "Active"
-          }
-          : session
-      )
-    )
-  }
-
-  function create_session() {
-    const alert = confirm("Bạn có chắc muốn thêm một session không?")
-    const date =  formatSessionTime(new Date())
-    if (!alert) return
-    else{
-
-      // Close active sessions before add new session in array
-      setSessions(prev => 
-        prev.map(session =>({
-          ...session,
-          status: "Closed"
-        })
-        )
-      ) 
-
-      setSessions(prev => [
-      ... prev, 
-      {
-        id: prev.length+1,
-        name: `Session ${prev.length + 1}`,
-        time: date,
-        status: "Active",
-        qr: "Generate QR",
-        checkin: "0/45"
-      }
-      ])
+  async function fetchSessions() {
+    try {
+      setLoading(true);
+      const data = await sessionApi.getSessionsBySection(sectionId);
+      console.log('Fetched sessions:', data);
+      setSessions(data);
+    } catch (error) {
+      console.error('Fetch sessions failed:', error);
+      alert('Không tải được danh sách session');
+    } finally {
+      setLoading(false);
     }
   }
+  const handleRefresh = async (sessionId: string) => {
+    try {
+      await qrCodeApi.generate(sessionId);
+      const currentQR = await qrCodeApi.getCurrent(sessionId);
+      setCurrentQRCode(currentQR);
+      console.log('Refreshed QR code:', currentQR);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
+  const displayCurrentCode = async (sessionId: string) => {
+    try {
+      setSelectedSessionId(sessionId);
+      setCurrentQRCode(null);
+      setOpenQR(true);
+
+      const currentQR = await qrCodeApi.getCurrent(sessionId);
+      setCurrentQRCode(currentQR);
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        setCurrentQRCode(null);
+        return;
+      }
+
+      console.error('Get current QR failed:', error);
+      alert('Không tải được QR code hiện tại');
+    }
+  };
+
+  useEffect(() => {
+    if (sectionId) fetchSessions();
+
+  }, [sectionId]);
+  const studentsEnrolled = sessions?.[0]?.checkin?.split('/')?.[1] ?? 0;
+  async function create_session() {
+    const ok = confirm('Bạn có chắc muốn thêm một session không?');
+    if (!ok) return;
+
+    try {
+      setCreating(true);
+      await sessionApi.createSession(sectionId, {
+        Name: `Session ${sessions.length + 1}`,
+        Time: new Date().toISOString(),
+      });
+      await fetchSessions();
+    } catch (error) {
+      console.error('Create session failed:', error);
+      alert('Tạo session thất bại');
+    } finally {
+      setCreating(false);
+    }
+  }
+  // console.log('Rendering SectionDetailPage with sessions:', sessions);
   return (
     <div className="min-h-screen bg-[#EBF4F6]">
-      {/* Header */}
       <header className="bg-[#09637E] text-white p-4 flex justify-between">
         <h1 className="text-xl font-bold">AttenLink</h1>
         <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center text-[#09637E]">
@@ -86,11 +104,8 @@ export default function SectionDetailPage() {
         </div>
       </header>
 
-      {/* Main */}
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-
-          {/* Back button */}
           <button
             onClick={() => router.push('/auth/sections')}
             className="flex items-center cursor-pointer gap-2 text-gray-700 hover:text-black text-xl transition"
@@ -98,96 +113,107 @@ export default function SectionDetailPage() {
             <FiArrowLeft />
           </button>
 
-          {/* Create button */}
           <button
-            className="bg-[#09637E] hover:bg-[#085a70] text-white px-5 py-2.5 rounded-lg font-medium transition shadow-md flex items-center gap-2"
-            onClick={()=>{create_session()}}
+            className="bg-[#09637E] hover:bg-[#085a70] text-white px-5 py-2.5 rounded-lg font-medium transition shadow-md flex items-center gap-2 disabled:opacity-60"
+            onClick={create_session}
+            disabled={creating}
           >
-            + Create Session
+            {creating ? 'Creating...' : '+ Create Session'}
           </button>
         </div>
 
-        {/* Card */}
         <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
           <div className="p-6 border-b">
             <h2 className="text-xl text-[#09637E]">Data Structure and Algorithms</h2>
             <p className="text-sm text-gray-600">Code: {code}</p>
-            <p className="text-sm text-gray-600">Students Enrolled: 45</p>
+            <p className="text-sm text-gray-600">Students Enrolled: {studentsEnrolled}</p>
           </div>
 
-          {/* Table */}
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead className="bg-[#088395] text-white">
-                <tr >
+                <tr>
                   <th className="px-6 py-3 text-left text-sm font-semibold">#</th>
                   <th className="px-6 py-3 text-left">Session</th>
                   <th className="px-6 py-3 text-left">Time</th>
-                  <th className="px-6 py-3 text-left">Status</th>
+                  {/* <th className="px-6 py-3 text-left">Status</th> */}
                   <th className="px-6 py-3 text-left">QR</th>
                   <th className="px-6 py-3 text-left">Check-in</th>
-                  <th className="px-6 py-3 text-left">Actions</th>
+                  <th className="px-6 py-3 text-left">Attendances</th>
                 </tr>
               </thead>
 
               <tbody className="divide-y">
-                {sessions.map((s) => (
-                  <tr key={s.id} className="hover:bg-[#d1e3e3]">
-                    <td className="px-6 py-4 text-black">{s.id}</td>
-                    <td className="px-6 py-4 font-medium text-black">{s.name}</td>
-                    <td className="px-6 py-4 text-black">{s.time}</td>
-
-                    <td className="px-6 py-4 text-black">
-                      <span
-                        onClick={() => toggle_status(s.id)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer ${s.status === 'Active'
-                          ? 'bg-green-300 text-green-800'
-                          : 'bg-red-300 text-red-800'
-                          }`}
-                      >
-                        {s.status}
-                      </span>
-                    </td>
-
-                    <td
-                      onClick={() => {
-                        setSelectedSession(s.id)
-                        setOpenQR(true)
-                      }}
-                      className="text-[#09637E] cursor-pointer hover:underline"
-                    >
-                      Generate QR
-                    </td>
-
-                    <td className="px-6 py-4 text-black">
-                      {s.checkin}
-                    </td>
-
-                    <td className="px-6 py-4">
-                      <Link className="text-[#088395] cursor-pointer hover:underline"
-                        href={`/auth/sections/${code}/${s.id}`}
-                      >
-                        View Attendance
-                      </Link>
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                      Loading sessions...
                     </td>
                   </tr>
-                ))}
-              </tbody>
+                ) : sessions.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                      No sessions found
+                    </td>
+                  </tr>
+                ) : (
+                  [...sessions].reverse().map((s, index) => (
+                    <tr key={s.id} className="hover:bg-[#d1e3e3]">
+                      <td className="px-6 py-4 text-black">{index + 1}</td>
+                      <td className="px-6 py-4 font-medium text-black">{s.name}</td>
+                      <td className="px-6 py-4 text-black">{s.time}</td>
 
+                      {/* <td className="px-6 py-4 text-black">
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium ${s.status === 'Active'
+                            ? 'bg-green-300 text-green-800'
+                            : 'bg-red-300 text-red-800'
+                            }`}
+                        >
+                          {s.status}
+                        </span>
+                      </td> */}
+
+                      <td
+                        onClick={() => {
+                          setSelectedSession(s.name);
+                          setOpenQR(true);
+                          setSessionId(s.id);
+                          displayCurrentCode(s.id)
+                        }}
+                        className="px-6 py-4 text-[#09637E] cursor-pointer hover:underline"
+                      >
+                        Details QR
+                      </td>
+
+                      <td className="px-6 py-4 text-black">{s.checkin}</td>
+
+                      <td className="px-6 py-4">
+                        <Link
+                          className="text-[#088395] cursor-pointer hover:underline"
+                          href={`/auth/sections/${code}/${s.id}`}
+                        >
+                          View Attendance
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
             </table>
           </div>
         </div>
       </main>
-      {
-        openQR && selectedSession && (
-          <QRCodeModal
-            sessionId={selectedSession}
-            sectionCode={code as string}
-            createdAt={new Date()}
-            onClose={() => setOpenQR(false)}
-          />
-        )
-      }
+
+      {openQR && selectedSession && (
+        <QRCodeModal
+          sessionId={String(selectedSession)}
+          sectionCode={code}
+          currentQRCode={currentQRCode}
+          onClose={() => setOpenQR(false)}
+          handleRefresh={() => handleRefresh(String(sessionId))}
+        />
+      )}
     </div>
   );
 }

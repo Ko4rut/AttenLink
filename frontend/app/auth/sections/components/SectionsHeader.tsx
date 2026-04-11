@@ -1,9 +1,10 @@
 'use client';
 
-import { FiArrowLeft, FiX } from "react-icons/fi";
+import { FiArrowLeft } from "react-icons/fi";
 import { useRouter } from 'next/navigation';
-import CreateSectionModal from "@/app/auth/sections/components/CreateSectionModal"
+import CreateSectionModal from "@/app/auth/sections/components/CreateSectionModal";
 import { useState } from 'react';
+import { createSection } from '@/services/section.api';
 
 export default function SectionHeader() {
     const [isOpen, setIsOpen] = useState(false);
@@ -15,43 +16,65 @@ export default function SectionHeader() {
         description: '',
     });
 
+    const router = useRouter();
 
-    // const user = { image: '/path/to/your-avatar.jpg' }; // → thay bằng real user sau
-
-
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleInputChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: Gọi API để tạo section mới
-        console.log('Creating section:', formData);
-        // Sau khi tạo thành công → đóng modal + refresh danh sách
-        setIsOpen(false);
-        // setFormData({ code: '', name: '', description: '' }); // reset nếu cần
+
+        try {
+            setLoading(true);
+
+            const teacherUserId = localStorage.getItem('user_id');
+
+            if (!teacherUserId) {
+                throw new Error('Teacher user id not found');
+            }
+
+            await createSection(teacherUserId, {
+                code: formData.code,
+                name: formData.name,
+                description: formData.description,
+            });
+
+            setIsOpen(false);
+            setFormData({
+                code: '',
+                name: '',
+                description: '',
+            });
+
+            window.location.reload();
+        } catch (error) {
+            console.error('Create section failed:', error);
+            alert('Create section failed');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const router = useRouter();
     return (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <button
                 onClick={() => router.push('/auth/home')}
-                className="flex items-center gap-2 cu text-gray-700 hover:text-black cursor-pointer text-xl transition"
+                className="cu flex cursor-pointer items-center gap-2 text-xl text-gray-700 transition hover:text-black"
             >
                 <FiArrowLeft />
             </button>
 
             <button
                 onClick={() => setIsOpen(true)}
-                className="bg-[#09637E] hover:bg-[#085a70] cursor-pointer text-white px-5 py-2.5 rounded-lg font-medium transition shadow-md flex items-center gap-2"
+                className="flex items-center gap-2 rounded-lg bg-[#09637E] px-5 py-2.5 font-medium text-white shadow-md transition hover:bg-[#085a70] cursor-pointer"
             >
                 + Create Section
             </button>
 
-            {/* Modal Create Section */}
             <CreateSectionModal
                 isOpen={isOpen}
                 onClose={() => setIsOpen(false)}
@@ -61,6 +84,5 @@ export default function SectionHeader() {
                 loading={loading}
             />
         </div>
-    )
-
+    );
 }

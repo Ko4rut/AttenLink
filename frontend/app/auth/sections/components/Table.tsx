@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 
 type Section = {
+  SectionID: string
   code: string
   name: string
   enrolled: number
@@ -32,7 +33,7 @@ export default function Table_Components({ data }: Props) {
           {data.map((items) => (
             <tr
               key={items.code}
-              onClick={() => router.push(`/auth/sections/${items.code}`)}
+              onClick={() => router.push(`/auth/sections/${items.SectionID}?code=${items.code}`)}
               className="bg-white hover:bg-[#7AB2B2]/30 transition-colors cursor-pointer"
             >
               <td className="px-6 py-4 h-13 whitespace-nowrap text-sm font-medium text-gray-900">

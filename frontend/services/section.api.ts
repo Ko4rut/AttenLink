@@ -30,3 +30,25 @@ export const getSectionsByTeacher = async (
 
   return res.data;
 };
+
+export type CreateSectionPayload = {
+  code: string;
+  name: string;
+  description: string;
+};
+
+export const createSection = async (
+  teacherUserId: string,
+  data: CreateSectionPayload
+) => {
+  const res = await apiClient.post("/sections", data, {
+    params: {
+      teacher_user_id: teacherUserId,
+    },
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  return res.data;
+};
