@@ -16,7 +16,7 @@ class QRCodeDB(Base):
     
     token = Column(String, unique=True, nullable=False, index=True)
     expireAt = Column(DateTime, nullable=False)
-    isActive = Column(Boolean, default=True, nullable=False)
+    isActive = Column(Boolean, default=True)
     createAt = Column(DateTime(timezone=False), server_default=func.now())
     # Relationship
     session = relationship("SessionDB", back_populates="qrcodes")

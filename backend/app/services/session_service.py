@@ -263,29 +263,26 @@ def revoke_qrcode_service(qr_token_id: UUID, teacher_user_id: UUID, db: Session)
             SectionDB.SectionID == session.SectionID
         ).first()
 
-        if section and section.teacherUserID != teacher_user_id:
-            raise HTTPException(status_code=403, detail="No permission")
+        if section.teacherUserID != teacher_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to delete this section"
+            )
 
         qrcode.isActive = False
-        db.commit()
+        db.flush()
+        
         create_audit_log_service(
             userID=teacher_user_id,
             action="REVOKE_QR_CODE",
             db=db
         )
-
-        db.commit()
+        db.commit() 
         db.refresh(qrcode)
 
-        return {
-            "QRTokenID": qrcode.QRTokenID,
-            "isActive": qrcode.isActive,
-            "message": "QR Code has been revoked successfully"
-        }
+        return qrcode
 
     except HTTPException:
         raise
     except Exception as e:
-        db.rollback()
-        print("ERROR:", str(e))  # thêm dòng này
         raise HTTPException(status_code=400, detail=f"Revoke QR failed: {str(e)}")
