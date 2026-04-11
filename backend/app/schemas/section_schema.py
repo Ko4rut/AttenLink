@@ -26,6 +26,7 @@ class SectionResponse(SectionBase):
         from_attributes = True
 
 class SectionListItem(BaseModel):
+    SectionID: UUID
     code: str
     name: str
     enrolled: int

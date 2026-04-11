@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 
 from app.core.database import get_db
-from app.schemas.session_schema import (SessionCreate, SessionUpdate, SessionResponse, QRCodeResponse, QRCodeRevokeResponse)
+from app.schemas.session_schema import (GenerateQRCodeResponse, SessionCreate, SessionUpdate, SessionResponse
+                                        ,SessionBySectionResponse, QRCodeResponse,
+                                        QRCodeRevokeResponse)
 from app.services.session_service import (
     create_session_service,
     get_sessions_by_section_service,
@@ -33,13 +35,13 @@ def create_session(
         db=db
     )
 
-
-@router.get("/sections/{section_id}/sessions", response_model=list[SessionResponse])
-def get_sessions_by_section(
-    section_id: UUID,
-    db: Session = Depends(get_db)
-):
-    return get_sessions_by_section_service(section_id=section_id, db=db)
+@router.get("/sections/{section_id}/sessions", response_model=SessionBySectionResponse)
+def get_sessions_by_section(section_id: UUID, db: Session = Depends(get_db)):
+    sessions = get_sessions_by_section_service(section_id, db)
+    return {
+        "message": "Get sessions successfully",
+        "data": sessions
+    }
 
 
 @router.get("/{session_id}", response_model=SessionResponse)
@@ -47,7 +49,7 @@ def get_session_detail(session_id: UUID, db: Session = Depends(get_db)):
     return get_session_by_id_service(session_id=session_id, db=db)
 
 
-@router.post("/{session_id}/qrcode", response_model=SessionResponse)
+@router.post("/{session_id}/qrcode", response_model=QRCodeResponse)
 def generate_qr_code(
     session_id: UUID,
     teacher_user_id: UUID,

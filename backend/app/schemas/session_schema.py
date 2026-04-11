@@ -27,7 +27,48 @@ class SessionResponse(SessionBase):
     class Config:
         from_attributes = True
 
+class QRCodeInfoResponse(BaseModel):
+    QRTokenID: UUID
+    token: str
+    expireAt: datetime
 
+    class Config:
+        from_attributes = True
+
+
+class SessionBriefResponse(BaseModel):
+    SessionID: UUID
+    SectionID: UUID
+    Name: str
+    Time: datetime
+    isDeleted: bool
+
+    class Config:
+        from_attributes = True
+
+
+class GenerateQRCodeResponse(BaseModel):
+    session: SessionBriefResponse
+    qrcode: QRCodeInfoResponse
+
+
+class SessionBySectionItem(BaseModel):
+    SessionID: UUID
+    SectionID: UUID
+    Name: str
+    Time: datetime
+    isDeleted: bool
+    attendanceCount: int = 0
+    totalStudents: int = 0
+    status: str = "Closed"
+
+    class Config:
+        from_attributes = True
+
+
+class SessionBySectionResponse(BaseModel):
+    message: str
+    data: list[SessionBySectionItem]
 
 
 class QRCodeResponse(BaseModel):
@@ -44,4 +85,4 @@ class QRCodeResponse(BaseModel):
 class QRCodeRevokeResponse(BaseModel):
     QRTokenID: UUID
     isActive: bool
-    message: str 
+    message: str

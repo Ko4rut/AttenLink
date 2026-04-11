@@ -1,14 +1,17 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import uuid
 from app.models.qrcode_model import QRCodeDB
 
 from app.models.session_model import SessionDB
 from app.models.section_model import SectionDB
-from app.schemas.session_schema import SessionCreate, SessionUpdate, SessionResponse
+from app.schemas.session_schema import SessionCreate, SessionUpdate, SessionResponse, SessionBySectionItem
 from app.services.auditlog_service import create_audit_log_service
+from app.models.attendance_model import AttendanceRecordDB
+from app.models.enrollment_model import EnrollmentDB
 
 
 # ====================== CREATE SESSION ======================
@@ -69,12 +72,60 @@ def create_session_service(
 # ====================== GET SESSIONS BY SECTION ======================
 def get_sessions_by_section_service(section_id: UUID, db: Session):
     try:
-        sessions = db.query(SessionDB).filter(
-            SessionDB.SectionID == section_id,
-            SessionDB.isDeleted == False
-        ).order_by(SessionDB.Time.desc()).all()
+        sessions = (
+            db.query(SessionDB)
+            .filter(
+                SessionDB.SectionID == section_id,
+                SessionDB.isDeleted == False
+            )
+            .order_by(SessionDB.Time.desc())
+            .all()
+        )
 
-        return sessions
+        total_students = (
+            db.query(func.count(EnrollmentDB.EnrollmentID))
+            .filter(
+                EnrollmentDB.SectionID == section_id,
+                EnrollmentDB.isDeleted == False
+            )
+            .scalar()
+        ) or 0
+
+        result = []
+
+        for session in sessions:
+            attendance_count = (
+                db.query(func.count(AttendanceRecordDB.AttendanceRecordID))
+                .filter(
+                    AttendanceRecordDB.SessionID == session.SessionID,
+                    AttendanceRecordDB.isDeleted == False
+                )
+                .scalar()
+            ) or 0
+
+            active_qr = (
+                db.query(QRCodeDB)
+                .filter(
+                    QRCodeDB.SessionID == session.SessionID,
+                    QRCodeDB.isActive == True
+                )
+                .first()
+            )
+
+            session_status = "Active" if active_qr else "Closed"
+
+            result.append({
+                "SessionID": session.SessionID,
+                "SectionID": session.SectionID,
+                "Name": session.Name,
+                "Time": session.Time,
+                "isDeleted": session.isDeleted,
+                "attendanceCount": attendance_count,
+                "totalStudents": total_students,
+                "status": session_status
+            })
+
+        return result
 
     except Exception as e:
         raise HTTPException(
@@ -153,8 +204,6 @@ def update_session_service(
 
 
 # ====================== GENERATE QR CODE TOKEN ======================
-
-
 def generate_qr_token_service(
     session_id: UUID,
     teacher_user_id: UUID,
@@ -169,14 +218,28 @@ def generate_qr_token_service(
         if not session:
             raise HTTPException(status_code=404, detail="Session not found")
 
-        # Check quyền teacher
-        section = db.query(SectionDB).filter(SectionDB.SectionID == session.SectionID).first()
-        if section and section.teacherUserID != teacher_user_id:
+        section = db.query(SectionDB).filter(
+            SectionDB.SectionID == session.SectionID,
+            SectionDB.isDeleted == False
+        ).first()
+
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+
+        if section.teacherUserID != teacher_user_id:
             raise HTTPException(status_code=403, detail="No permission")
 
-        # Tạo QR Code mới
+        # Revoke tất cả QR cũ đang active của session này
+        db.query(QRCodeDB).filter(
+            QRCodeDB.SessionID == session_id,
+            QRCodeDB.isActive == True
+        ).update(
+            {"isActive": False},
+            synchronize_session=False
+        )
+
         token = str(uuid.uuid4())
-        expire_at = datetime.utcnow() + timedelta(minutes=15)  # ví dụ 15 phút
+        expire_at = datetime.now(timezone.utc) + timedelta(minutes=15)
 
         new_qrcode = QRCodeDB(
             SessionID=session_id,
@@ -197,21 +260,23 @@ def generate_qr_token_service(
         db.commit()
         db.refresh(new_qrcode)
 
-        # Trả về cả session + qrcode info nếu cần
         return {
-            "session": session,
-            "qrcode": {
-                "QRTokenID": new_qrcode.QRTokenID,
-                "token": new_qrcode.token,
-                "expireAt": new_qrcode.expireAt
-            }
+            "QRTokenID": new_qrcode.QRTokenID,
+            "token": new_qrcode.token,
+            "createAt": new_qrcode.createAt,
+            "expireAt": new_qrcode.expireAt,
+            "isActive": new_qrcode.isActive
         }
 
     except HTTPException:
+        db.rollback()
         raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"Generate QR failed: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Generate QR failed: {str(e)}"
+        )
     
 # ====================== GET CURRENT ACTIVE QR CODE ======================
 def get_current_qrcode_service(session_id: UUID, db: Session):

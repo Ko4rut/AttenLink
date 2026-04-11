@@ -6,9 +6,15 @@ from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.user_model import UserDB
 
-oauth2_scheme_student = OAuth2PasswordBearer(tokenUrl="/api/v1/students/login")
-oauth2_scheme_teacher = OAuth2PasswordBearer(tokenUrl="/api/v1/teachers/login")
+oauth2_scheme_student = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/students/login",
+    scheme_name="StudentOAuth2"
+)
 
+oauth2_scheme_teacher = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/teachers/login",
+    scheme_name="TeacherOAuth2"
+)
 
 def get_current_student(
     token: str = Depends(oauth2_scheme_student),
@@ -48,7 +54,6 @@ def get_current_student(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
         )
-
 
 def get_current_teacher(
     token: str = Depends(oauth2_scheme_teacher),
