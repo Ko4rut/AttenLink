@@ -351,3 +351,49 @@ def revoke_qrcode_service(qr_token_id: UUID, teacher_user_id: UUID, db: Session)
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Revoke QR failed: {str(e)}")
+
+# ====================== SOFT DELETE SECTION ======================
+def delete_section_service(
+    section_id: UUID,
+    teacher_user_id: UUID,
+    db: Session
+):
+    try:
+        section = db.query(SectionDB).filter(
+            SectionDB.SectionID == section_id,
+            SectionDB.isDeleted == False
+        ).first()
+
+        if not section:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Section not found"
+            )
+
+        if section.teacherUserID != teacher_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to delete this section"
+            )
+
+        section.isDeleted = True
+        db.flush()
+
+        create_audit_log_service(
+            userID=teacher_user_id,
+            action="DELETE_SECTION",
+            db=db
+        )
+        db.commit()
+        db.refresh(section)
+
+        return section
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Delete section failed: {str(e)}"
+        )

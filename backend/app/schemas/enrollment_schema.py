@@ -14,3 +14,21 @@ class EnrollmentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class EnrollmentJoin(BaseModel):
+    code: str
+ 
+ 
+class SectionOut(BaseModel):
+    SectionID: UUID
+    name: str
+    description: str | None = None
+    code: str
+ 
+    class Config:
+        from_attributes = True
+ 
+ 
+class AttendanceCheckIn(BaseModel):
+    id: UUID    # QRTokenID
+    token: str

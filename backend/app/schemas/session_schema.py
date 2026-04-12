@@ -86,3 +86,8 @@ class QRCodeRevokeResponse(BaseModel):
     QRTokenID: UUID
     isActive: bool
     message: str
+
+class SectionDeleteResponse(BaseModel):
+    SectionID: UUID
+    isDeleted: bool
+    message: str

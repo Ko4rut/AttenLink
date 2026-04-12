@@ -4,7 +4,7 @@ from uuid import UUID
 
 from app.core.database import get_db
 from app.schemas.session_schema import (GenerateQRCodeResponse, SessionCreate, SessionUpdate, SessionResponse
-                                        ,SessionBySectionResponse, QRCodeResponse,
+                                        ,SessionBySectionResponse, QRCodeResponse,    SectionDeleteResponse,
                                         QRCodeRevokeResponse)
 from app.services.session_service import (
     create_session_service,
@@ -14,6 +14,8 @@ from app.services.session_service import (
     generate_qr_token_service,
     get_current_qrcode_service,
     revoke_qrcode_service,
+
+    delete_section_service,
     
 
 )
@@ -101,4 +103,22 @@ def revoke_qrcode(
         QRTokenID=result.QRTokenID,
         isActive=result.isActive,
         message="QR Code revoked successfully"
+    )
+
+# ==================== SOFT DELETE SECTION ====================
+@router.patch("/sections/{section_id}/delete", response_model=SectionDeleteResponse)
+def delete_section(
+    section_id: UUID,
+    teacher_user_id: UUID,
+    db: Session = Depends(get_db)
+):
+    section = delete_section_service(
+        section_id=section_id,
+        teacher_user_id=teacher_user_id,
+        db=db
+    )
+    return SectionDeleteResponse(
+        SectionID=section.SectionID,
+        isDeleted=section.isDeleted,
+        message="Section deleted successfully"
     )
