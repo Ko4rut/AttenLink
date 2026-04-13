@@ -3,7 +3,7 @@
 import { FaUser } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import useAuthGuard from '@/hooks/useAuthGuard';
-
+import Header from '@/components/Header';
 
 export default function SectionsPage() {
   const router = useRouter();
@@ -14,13 +14,7 @@ export default function SectionsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#09637E] text-white p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">AttenLink</h1>
-
-        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-blue-600">
-          <FaUser />
-        </div>
-      </header>
+      <Header />
 
       <main className="max-w-6xl mx-auto mt-8">
 

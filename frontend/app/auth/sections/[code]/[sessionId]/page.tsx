@@ -18,7 +18,7 @@ import {
 
 
 import { useRouter } from "next/navigation";
-
+import Header from '@/components/Header';
 
 
 function formatSessionDate(time?: string) {
@@ -153,12 +153,7 @@ export default function DemoPage() {
 
   return (
     <div className="overflow-hidden bg-white shadow-sm">
-      <header className="flex items-center justify-between bg-[#09637E] p-4 text-white">
-        <h1 className="text-xl font-bold">AttenLink</h1>
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#09637E]">
-          <FaUser size={18} />
-        </div>
-      </header>
+      <Header/>
 
       {loading ? (
         <div className="p-10 text-center text-gray-500">Loading attendance...</div>

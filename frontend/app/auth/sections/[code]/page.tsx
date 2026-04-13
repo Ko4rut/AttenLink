@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { sessionApi, type SessionItem } from '@/services/session.api';
 import { qrCodeApi } from "@/services/qrcode.api";
 import axios from 'axios';
+import Header from '@/components/Header';
 
 export default function SectionDetailPage() {
   const params = useParams();
@@ -97,12 +98,7 @@ export default function SectionDetailPage() {
   // console.log('Rendering SectionDetailPage with sessions:', sessions);
   return (
     <div className="min-h-screen bg-[#EBF4F6]">
-      <header className="bg-[#09637E] text-white p-4 flex justify-between">
-        <h1 className="text-xl font-bold">AttenLink</h1>
-        <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center text-[#09637E]">
-          <FaUser size={18} />
-        </div>
-      </header>
+      <Header />
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
