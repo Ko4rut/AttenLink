@@ -98,7 +98,8 @@ def get_sessions_by_section_service(section_id: UUID, db: Session):
                 db.query(func.count(AttendanceRecordDB.AttendanceRecordID))
                 .filter(
                     AttendanceRecordDB.SessionID == session.SessionID,
-                    AttendanceRecordDB.isDeleted == False
+                    AttendanceRecordDB.isDeleted == False,
+                    AttendanceRecordDB.status != "Absent"
                 )
                 .scalar()
             ) or 0
@@ -459,6 +460,7 @@ def get_session_by_section_4Student_service(
                     AttendanceRecordDB.SessionID.in_(session_ids),
                     AttendanceRecordDB.studentUserID == student_id,
                     AttendanceRecordDB.isDeleted == False
+                    
                 )
                 .all()
             )

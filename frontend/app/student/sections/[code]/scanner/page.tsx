@@ -1,12 +1,29 @@
-"use client";
+'use client';
 
 import Header from "../../components/SectionHeader";
 import Body from "./components/ScannerBody";
 import { attendanceApi } from "@/services/student.qrcode.api";
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
+
+function extractQrInfo(decodedText: string) {
+  try {
+    const url = new URL(decodedText);
+    const token = url.searchParams.get("token") || "";
+
+    const parts = url.pathname.split("/").filter(Boolean);
+    // attend / ABC / Session 1
+    const sectionCode = parts[1] || "";
+
+    return { token, sectionCode };
+  } catch {
+    return { token: decodedText, sectionCode: "" };
+  }
+}
 
 export default function ScanerPage() {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleLogout = () => {
     const path = window.location.pathname.split("/");
@@ -19,19 +36,34 @@ export default function ScanerPage() {
     try {
       setLoading(true);
 
-      const res = await attendanceApi.checkInByQr({
-        token: decodedText,
-      });
+      const { token, sectionCode } = extractQrInfo(decodedText);
 
+      console.log("decodedText:", decodedText);
+      console.log("token:", token);
+      console.log("sectionCode:", sectionCode);
+
+      if (!token) {
+        alert("QR không chứa token hợp lệ");
+        return;
+      }
+
+      const res = await attendanceApi.checkInByQr({ token });
       console.log("Check-in success:", res);
-      alert(res.message || "Điểm danh thành công");
+
+      alert("Điểm danh thành công");
+
+      if (sectionCode) {
+        router.push(`/student/sections/${sectionCode}`);
+      } else {
+        router.push("/student/sections");
+      }
     } catch (error: any) {
       console.error("Check-in failed:", error);
       alert(error?.response?.data?.detail || "Điểm danh thất bại");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   return (
     <div className="flex min-h-screen flex-col justify-between bg-[#DCE3E6]">

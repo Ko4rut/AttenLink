@@ -35,14 +35,14 @@ export default function Body({ onScanSuccess }: ScanQrBodyProps) {
 
               try {
                 await html5QrCode.stop();
-              } catch {}
+              } catch { }
 
               setScannerVisible(false);
             },
-            () => {}
+            () => { }
           );
           return;
-        } catch {}
+        } catch { }
 
         const cameras = await Html5Qrcode.getCameras();
 
@@ -62,17 +62,18 @@ export default function Body({ onScanSuccess }: ScanQrBodyProps) {
           },
           async (decodedText) => {
             if (!mounted) return;
-
             setScanResult(decodedText);
+            console.log('QR scanned:', decodedText);
+            alert(decodedText);
             onScanSuccess?.(decodedText);
 
             try {
               await html5QrCode.stop();
-            } catch {}
+            } catch { }
 
             setScannerVisible(false);
           },
-          () => {}
+          () => { }
         );
       } catch (err) {
         console.error('Lỗi khởi động camera:', err);
@@ -88,11 +89,11 @@ export default function Body({ onScanSuccess }: ScanQrBodyProps) {
       (async () => {
         try {
           await html5QrCode.stop();
-        } catch {}
+        } catch { }
 
         try {
           html5QrCode.clear();
-        } catch {}
+        } catch { }
       })();
     };
   }, [scannerVisible, onScanSuccess]);

@@ -6,13 +6,16 @@ from fastapi import HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session, joinedload
 
+from app.models.section_model import SectionDB
 from app.models.attendance_model import AttendanceRecordDB
 from app.models.enrollment_model import EnrollmentDB
 from app.models.qrcode_model import QRCodeDB
 from app.models.session_model import SessionDB
+from app.models.student_profile_model import StudentProfileDB
 from app.schemas.attendance_schema import (
     AttendanceRecordCheckInRequest,
     AttendanceRecordUpdateRequest,
+    AttendanceManualUpdateRequest
 )
 
 
@@ -94,140 +97,208 @@ def check_in(
     return record
 
 
+
+from app.schemas.attendance_schema import (
+    SessionAttendanceResponse,
+    AttendanceSessionInfo,
+    AttendanceSummary,
+    AttendanceListItem,
+    AttendanceStudentInfo,
+)
+
 def list_session_attendance(
     session_id: UUID,
     db: Session,
-) -> list[AttendanceRecordDB]:
-    """Return all attendance records for a session, with student info eager-loaded."""
-    # Verify session exists
-    session = (
+) -> SessionAttendanceResponse:
+    session_obj = (
         db.query(SessionDB)
-        .filter(SessionDB.SessionID == session_id, SessionDB.isDeleted == False)
+        .filter(
+            SessionDB.SessionID == session_id,
+            SessionDB.isDeleted == False,
+        )
         .first()
     )
-    if not session:
+
+    if not session_obj:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found.",
         )
 
-    records = (
-        db.query(AttendanceRecordDB)
-        .options(joinedload(AttendanceRecordDB.student).joinedload("user"))
+    section_obj = (
+        db.query(SectionDB)
         .filter(
-            AttendanceRecordDB.SessionID == session_id,
-            AttendanceRecordDB.isDeleted == False,
+            SectionDB.SectionID == session_obj.SectionID,
+            SectionDB.isDeleted == False,
         )
-        .order_by(AttendanceRecordDB.CreateAt)
-        .all()
-    )
-    return records
-
-
-def export_session_attendance(
-    session_id: UUID,
-    db: Session,
-) -> StreamingResponse:
-    """Export attendance records for a session as an Excel file."""
-    try:
-        import openpyxl
-        from openpyxl.styles import Font, PatternFill, Alignment
-    except ImportError:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="openpyxl is not installed. Run: pip install openpyxl",
-        )
-
-    # Verify session exists
-    session = (
-        db.query(SessionDB)
-        .filter(SessionDB.SessionID == session_id, SessionDB.isDeleted == False)
         .first()
     )
-    if not session:
+
+    if not section_obj:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Session not found.",
+            detail="Section not found.",
         )
 
-    records = (
+    enrollments = (
+        db.query(EnrollmentDB)
+        .filter(
+            EnrollmentDB.SectionID == section_obj.SectionID,
+            EnrollmentDB.isDeleted == False,
+        )
+        .all()
+    )
+
+    student_user_ids = [enrollment.StudentID for enrollment in enrollments]
+
+    if not student_user_ids:
+        student_profiles = []
+    else:
+        student_profiles = (
+            db.query(StudentProfileDB)
+            .options(joinedload(StudentProfileDB.user))
+            .filter(
+                StudentProfileDB.userID.in_(student_user_ids),
+                StudentProfileDB.isDeleted == False,
+            )
+            .all()
+        )
+
+    student_map: dict[UUID, StudentProfileDB] = {
+        student.userID: student for student in student_profiles if student.user
+    }
+
+    attendance_records = (
         db.query(AttendanceRecordDB)
-        .options(joinedload(AttendanceRecordDB.student).joinedload("user"))
+        .options(
+            joinedload(AttendanceRecordDB.student).joinedload(StudentProfileDB.user)
+        )
         .filter(
             AttendanceRecordDB.SessionID == session_id,
             AttendanceRecordDB.isDeleted == False,
         )
-        .order_by(AttendanceRecordDB.CreateAt)
+        .order_by(AttendanceRecordDB.CreateAt.asc())
         .all()
     )
 
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Attendance"
+    record_map: dict[UUID, AttendanceRecordDB] = {
+        record.studentUserID: record for record in attendance_records
+    }
 
-    # Header styling
-    header_font = Font(bold=True, color="FFFFFF")
-    header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
-    center = Alignment(horizontal="center")
+    response_records: list[AttendanceListItem] = []
 
-    headers = ["#", "Student ID", "Full Name", "Username", "Email", "Check-in Time"]
-    ws.append(headers)
-    for col_num, _ in enumerate(headers, start=1):
-        cell = ws.cell(row=1, column=col_num)
-        cell.font = header_font
-        cell.fill = header_fill
-        cell.alignment = center
+    for enrollment in enrollments:
+        student_user_id = enrollment.StudentID
+        student_profile = student_map.get(student_user_id)
 
-    # Data rows
-    for idx, record in enumerate(records, start=1):
-        student_user = None
-        if record.student and hasattr(record.student, "user"):
-            student_user = record.student.user
+        if not student_profile or not student_profile.user:
+            continue
 
-        ws.append([
-            idx,
-            str(record.studentUserID),
-            student_user.fullName if student_user else "",
-            student_user.username if student_user else "",
-            student_user.email if student_user else "",
-            record.CreateAt.strftime("%Y-%m-%d %H:%M:%S") if record.CreateAt else "",
-        ])
+        user = student_profile.user
+        attendance_record = record_map.get(student_user_id)
 
-    # Auto-size columns
-    for column in ws.columns:
-        max_length = max((len(str(cell.value or "")) for cell in column), default=0)
-        ws.column_dimensions[column[0].column_letter].width = max(max_length + 4, 12)
+        if attendance_record:
+            item_status = attendance_record.status
 
-    stream = io.BytesIO()
-    wb.save(stream)
-    stream.seek(0)
+            response_records.append(
+                AttendanceListItem(
+                    AttendanceRecordID=attendance_record.AttendanceRecordID,
+                    studentUserID=student_user_id,
+                    SessionID=session_id,
+                    status=item_status,
+                    checkInTime=attendance_record.CreateAt,
+                    createdAt=attendance_record.CreateAt,
+                    isDeleted=attendance_record.isDeleted,
+                    student=AttendanceStudentInfo(
+                        userID=user.userID,
+                        studentCode=user.username,
+                        fullName=user.fullName,
+                        email=user.email,
+                        username=user.username,
+                    ),
+                )
+            )
+        else:
+            response_records.append(
+                AttendanceListItem(
+                    AttendanceRecordID=None,
+                    studentUserID=student_user_id,
+                    SessionID=session_id,
+                    status="Absent",
+                    checkInTime=None,
+                    createdAt=None,
+                    isDeleted=False,
+                    student=AttendanceStudentInfo(
+                        userID=user.userID,
+                        studentCode=user.username,
+                        fullName=user.fullName,
+                        email=user.email,
+                        username=user.username,
+                    ),
+                )
+            )
 
-    filename = f"attendance_session_{session_id}.xlsx"
-    return StreamingResponse(
-        stream,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    present_count = sum(1 for item in response_records if item.status == "Present")
+    late_count = sum(1 for item in response_records if item.status == "Late")
+    absent_count = sum(1 for item in response_records if item.status == "Absent")
+
+    return SessionAttendanceResponse(
+        session=AttendanceSessionInfo(
+            SessionID=session_obj.SessionID,
+            SectionID=session_obj.SectionID,
+            Name=session_obj.Name,
+            Time=session_obj.Time,
+        ),
+        summary=AttendanceSummary(
+            present=present_count,
+            absent=absent_count,
+            late=late_count,
+            total=len(response_records),
+        ),
+        records=response_records,
     )
-
-
-def update_attendance_record(
-    attendance_record_id: UUID,
-    payload: AttendanceRecordUpdateRequest,
+def update_attendance_manual(
+    payload: AttendanceManualUpdateRequest,
     db: Session,
-) -> AttendanceRecordDB:
-    """Soft-delete or restore an attendance record (teacher use)."""
-    record = (
-        db.query(AttendanceRecordDB)
-        .filter(AttendanceRecordDB.AttendanceRecordID == attendance_record_id)
-        .first()
-    )
+):
+    record = None
+
+    if payload.AttendanceRecordID:
+        record = (
+            db.query(AttendanceRecordDB)
+            .filter(
+                AttendanceRecordDB.AttendanceRecordID == payload.AttendanceRecordID,
+                AttendanceRecordDB.isDeleted == False,
+            )
+            .first()
+        )
+
     if not record:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Attendance record not found.",
+        record = (
+            db.query(AttendanceRecordDB)
+            .filter(
+                AttendanceRecordDB.studentUserID == payload.studentUserID,
+                AttendanceRecordDB.SessionID == payload.SessionID,
+                AttendanceRecordDB.isDeleted == False,
+            )
+            .first()
         )
 
-    record.isDeleted = payload.isDeleted
+    if record:
+        record.status = payload.status
+        record.isDeleted = False
+        db.commit()
+        db.refresh(record)
+        return {"message": "Attendance updated successfully", "data": record}
+
+    new_record = AttendanceRecordDB(
+        studentUserID=payload.studentUserID,
+        SessionID=payload.SessionID,
+        status=payload.status,
+        isDeleted=False,
+    )
+    db.add(new_record)
     db.commit()
-    db.refresh(record)
-    return record
+    db.refresh(new_record)
+
+    return {"message": "Attendance created successfully", "data": new_record}

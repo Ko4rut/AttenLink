@@ -8,16 +8,16 @@ from app.core.database import get_db
 from app.dependencies.auth import get_current_student, get_current_teacher
 from app.schemas.attendance_schema import (
     AttendanceRecordCheckInRequest,
-    AttendanceRecordDetailResponse,
+    SessionAttendanceResponse,
     AttendanceRecordResponse,
-    AttendanceRecordUpdateRequest,
+    AttendanceManualUpdateRequest
 )
 from app.services.attendance_service import (
     check_in,
-    export_session_attendance,
     list_session_attendance,
-    update_attendance_record,
+    update_attendance_manual
 )
+from app.services.attendance_export_service import export_attendance_service
 
 router = APIRouter(tags=["Attendance"])
 
@@ -43,64 +43,34 @@ def check_in_route(
 
 @router.get(
     "/sessions/{session_id}/attendance",
-    response_model=list[AttendanceRecordDetailResponse],
-    status_code=200,
-    summary="List all check-ins for a session",
+    response_model=SessionAttendanceResponse,
 )
-def list_session_attendance_route(
-    session_id: UUID,
-    db: Session = Depends(get_db),
-    _=Depends(get_current_teacher),
-):
-    """
-    Lấy danh sách toàn bộ bản ghi điểm danh của một session.
-
-    - Chỉ teacher mới được phép truy cập.
-    - Trả về thông tin student kèm theo từng bản ghi.
-    """
+def list_session_attendance_route(session_id: UUID, db: Session = Depends(get_db)):
     return list_session_attendance(session_id=session_id, db=db)
 
 
-@router.get(
-    "/sessions/{session_id}/attendance/export",
-    response_class=StreamingResponse,
-    status_code=200,
-    summary="Export attendance list of a session as Excel",
-)
-def export_session_attendance_route(
+@router.patch("/attendance/manual")
+def update_attendance_manual_route(
+    payload: AttendanceManualUpdateRequest,
+    db: Session = Depends(get_db),
+    _=Depends(get_current_teacher),
+):
+    return update_attendance_manual(payload=payload, db=db)
+
+@router.get("/sessions/{session_id}/attendance/export")
+def export_attendance(
     session_id: UUID,
     db: Session = Depends(get_db),
-    _=Depends(get_current_teacher),
 ):
-    """
-    Xuất danh sách điểm danh của session ra file Excel (.xlsx).
-
-    - Chỉ teacher mới được phép truy cập.
-    - File trả về gồm các cột: STT, Student ID, Full Name, Username, Email, Check-in Time.
-    """
-    return export_session_attendance(session_id=session_id, db=db)
-
-
-@router.patch(
-    "/attendance/{attendance_record_id}",
-    response_model=AttendanceRecordResponse,
-    status_code=200,
-    summary="Update (soft-delete or restore) an attendance record",
-)
-def update_attendance_record_route(
-    attendance_record_id: UUID,
-    payload: AttendanceRecordUpdateRequest,
-    db: Session = Depends(get_db),
-    _=Depends(get_current_teacher),
-):
-    """
-    Cập nhật trạng thái `isDeleted` của một bản ghi điểm danh.
-
-    - Chỉ teacher mới được phép truy cập.
-    - Dùng để soft-delete (`isDeleted: true`) hoặc khôi phục (`isDeleted: false`) bản ghi.
-    """
-    return update_attendance_record(
-        attendance_record_id=attendance_record_id,
-        payload=payload,
+    excel_file, filename = export_attendance_service(
+        session_id=session_id,
         db=db,
+    )
+
+    return StreamingResponse(
+        excel_file,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        },
     )
