@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from uuid import UUID
-
+from app.dependencies.auth import get_current_student 
 from app.core.database import get_db
 from app.schemas.session_schema import (GenerateQRCodeResponse, SessionCreate, SessionUpdate, SessionResponse
                                         ,SessionBySectionResponse, QRCodeResponse,    SectionDeleteResponse,
-                                        QRCodeRevokeResponse)
+                                        QRCodeRevokeResponse, StudentSectionDetailApiResponse)
 from app.services.session_service import (
     create_session_service,
     get_sessions_by_section_service,
@@ -14,10 +14,8 @@ from app.services.session_service import (
     generate_qr_token_service,
     get_current_qrcode_service,
     revoke_qrcode_service,
-
     delete_section_service,
-    
-
+    get_session_by_section_4Student_service,
 )
 
 router = APIRouter(prefix="/sessions", tags=["Sessions"])
@@ -122,3 +120,23 @@ def delete_section(
         isDeleted=section.isDeleted,
         message="Section deleted successfully"
     )
+
+@router.get(
+    "/sections/{section_code}",
+    response_model=StudentSectionDetailApiResponse
+)
+def get_section_detail_for_student(
+    section_code: str,
+    current_student = Depends(get_current_student),
+    db: Session = Depends(get_db)
+):
+    data = get_session_by_section_4Student_service(
+        section_code=section_code,
+        student_id=current_student.userID,
+        db=db
+    )
+
+    return {
+        "message": "Get section detail successfully",
+        "data": data
+    }

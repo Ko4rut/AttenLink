@@ -397,3 +397,118 @@ def delete_section_service(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Delete section failed: {str(e)}"
         )
+
+def get_session_by_section_4Student_service(
+    section_code: str,
+    student_id: UUID,
+    db: Session
+):
+    try:
+        # 1. Tìm section theo code
+        section = (
+            db.query(SectionDB)
+            .filter(
+                SectionDB.code == section_code,
+                SectionDB.isDeleted == False
+            )
+            .first()
+        )
+
+        if not section:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Section not found"
+            )
+
+        # 2. Check student đã join section chưa
+        enrollment = (
+            db.query(EnrollmentDB)
+            .filter(
+                EnrollmentDB.SectionID == section.SectionID,
+                EnrollmentDB.StudentID == student_id,
+                EnrollmentDB.isDeleted == False
+            )
+            .first()
+        )
+
+        if not enrollment:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You have not joined this section"
+            )
+
+        # 3. Lấy tất cả session của section
+        sessions = (
+            db.query(SessionDB)
+            .filter(
+                SessionDB.SectionID == section.SectionID,
+                SessionDB.isDeleted == False
+            )
+            .order_by(SessionDB.Time.asc())
+            .all()
+        )
+
+        session_ids = [session.SessionID for session in sessions]
+
+        # 4. Lấy attendance record của student trong các session đó
+        attendance_records = []
+        if session_ids:
+            attendance_records = (
+                db.query(AttendanceRecordDB)
+                .filter(
+                    AttendanceRecordDB.SessionID.in_(session_ids),
+                    AttendanceRecordDB.studentUserID == student_id,
+                    AttendanceRecordDB.isDeleted == False
+                )
+                .all()
+            )
+
+        attendance_map = {
+            record.SessionID: record
+            for record in attendance_records
+        }
+
+        # 5. Map dữ liệu trả về
+        attended_count = 0
+        session_items = []
+
+        for session in sessions:
+            attendance = attendance_map.get(session.SessionID)
+
+            if attendance:
+                attended_count += 1
+                session_items.append({
+                    "SessionID": session.SessionID,
+                    "name": session.Name,
+                    "time": session.Time,
+                    "attendanceRecordID": attendance.AttendanceRecordID,
+                    "checkInTime": attendance.CreateAt,
+                    "status": "Attended"
+                })
+            else:
+                session_items.append({
+                    "SessionID": session.SessionID,
+                    "name": session.Name,
+                    "time": session.Time,
+                    "attendanceRecordID": None,
+                    "checkInTime": None,
+                    "status": "Absent"
+                })
+
+        return {
+            "SectionID": section.SectionID,
+            "code": section.code,
+            "name": section.name,
+            "description": section.description,
+            "attendedCount": attended_count,
+            "totalSessions": len(sessions),
+            "sessions": session_items
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Get sessions by section for student failed: {str(e)}"
+        )

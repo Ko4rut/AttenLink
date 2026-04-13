@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 from uuid import UUID
-
+from app.dependencies.auth import get_current_student 
 from app.core.database import get_db
-from app.schemas.section_schema import SectionCreate, SectionUpdate, SectionResponse, SectionListResponse
+from app.schemas.section_schema import (SectionCreate, SectionUpdate, SectionResponse, 
+                                        SectionListResponse, StudentSectionListResponse)
+
 from app.services.section_service import (
     create_section_service,
     get_all_sections_service,
@@ -12,6 +14,7 @@ from app.services.section_service import (
     delete_section_service,
     get_sections_by_teacher_id,
     soft_delete_section_service,
+    get_sections_by_student_id_service
 )
 
 router = APIRouter(prefix="/sections", tags=["Sections"])
@@ -96,3 +99,18 @@ def soft_delete_section(
         teacher_user_id=teacher_user_id,
         db=db
     )
+
+@router.get("/Student/sections", response_model=StudentSectionListResponse, summary='Get sections by StudentId')
+def get_my_sections(
+    current_user = Depends(get_current_student),
+    db: Session = Depends(get_db),
+):
+    sections = get_sections_by_student_id_service(
+        student_user_id=current_user.userID,
+        db=db
+    )
+
+    return {
+        "message": "Get sections successfully",
+        "data": sections
+    }

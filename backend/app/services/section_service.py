@@ -9,7 +9,7 @@ from app.schemas.section_schema import SectionCreate, SectionUpdate
 from app.services.auditlog_service import create_audit_log_service
 from app.models.enrollment_model import EnrollmentDB
 from app.models.session_model import SessionDB
-
+from app.schemas.section_schema import StudentSectionItem
 
 def create_section_service(section: SectionCreate, teacher_user_id: UUID, db: Session):
     try:
@@ -250,3 +250,56 @@ def soft_delete_section_service(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Soft delete section failed: {str(e)}"
         )    
+    
+
+def get_sections_by_student_id_service(
+    student_user_id: UUID,
+    db: Session
+) -> list[StudentSectionItem]:
+    try:
+        results = (
+            db.query(
+                SectionDB.SectionID.label("SectionID"),
+                SectionDB.code.label("code"),
+                SectionDB.name.label("name"),
+                func.count(SessionDB.SessionID).label("sessionsCount")
+            )
+            .join(
+                EnrollmentDB,
+                EnrollmentDB.SectionID == SectionDB.SectionID
+            )
+            .outerjoin(
+                SessionDB,
+                (SessionDB.SectionID == SectionDB.SectionID) &
+                (SessionDB.isDeleted == False)
+            )
+            .filter(
+                EnrollmentDB.StudentID == student_user_id,
+                EnrollmentDB.isDeleted == False,
+                SectionDB.isDeleted == False
+            )
+            .group_by(
+                SectionDB.SectionID,
+                SectionDB.code,
+                SectionDB.name
+            )
+            .all()
+        )
+
+        return [
+            StudentSectionItem(
+                SectionID=row.SectionID,
+                code=row.code,
+                name=row.name,
+                sessionsCount=row.sessionsCount
+            )
+            for row in results
+        ]
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Get sections by student failed: {str(e)}"
+        )

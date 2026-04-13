@@ -1,64 +1,99 @@
 'use client';
 
-import {useParams} from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Header from '@/app/student/sections/components/SectionHeader';
 import Body from '@/app/student/sections/[code]/components/SessionBody';
 import Footer from '@/app/student/sections/[code]/components/SessionFooter';
+import { studentSessionApi } from '@/services/student.session.api';
 
+type SessionItem = {
+  id: string;
+  title: string;
+  date: string;
+  checkIn: string;
+  status: 'Attended' | 'Absent';
+};
 
+type SectionDetailData = {
+  sectionName: string;
+  code: string;
+  attendance: string;
+  sessions: SessionItem[];
+};
 
 export default function SectionDetailPage() {
-    const params = useParams();
-    const code = params.code as string;
+  const params = useParams();
+  const router = useRouter();
+  const code = params.code as string;
 
+  const [sectionDetail, setSectionDetail] = useState<SectionDetailData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    const handleLogout = () => {
-        const path = window.location.pathname.split("/")
-        path.pop() // xoá phần tử cuối
+  const handleLogout = () => {
+    router.push('/student/sections');
+  };
 
-        const newPath = path.join("/")
-        console.log(newPath)
-        for (let i = 0; i < path.length; i++) {
-            console.log(path[i])
-        }
-        window.location.href = `${newPath}`;
+  const handleScanQR = () => {
+    router.push(`/student/sections/${code}/scanner`);
+  };
+
+  useEffect(() => {
+    if (!code) return;
+
+    const fetchSectionDetail = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data = await studentSessionApi.getSectionDetailByCode(code);
+        setSectionDetail(data);
+      } catch (err: any) {
+        console.error('Failed to fetch section detail:', err);
+        setError(err?.response?.data?.detail || 'Failed to load section detail');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const sectionDetail = {
-        sectionName: 'Data Structure Algorithms',
-        attendance: '1/2',
-        sessions: [
-            {
-                id: 1,
-                title: 'Session 1',
-                date: 'April 1, 2024',
-                checkIn: '18:00:00',
-                status: 'Attended',
-            },
-            {
-                id: 2,
-                title: 'Session 2',
-                date: 'April 1, 2024',
-                checkIn: '18:00:00',
-                status: 'Absent',
-            },
-        ],
-    };
+    fetchSectionDetail();
+  }, [code]);
 
-    const handleScanQR = () => {
-        window.location.href =  window.location.pathname+"/scanner";
-    };
-
+  if (loading) {
     return (
-        <div className="flex min-h-screen flex-col justify-between bg-[#DCE3E6]">
-            <Header onLogout={handleLogout} />
-            <Body
-                sectionName={sectionDetail.sectionName}
-                code={code}
-                attendance={sectionDetail.attendance}
-                sessions={sectionDetail.sessions}
-            />\
-            <Footer onScanQR={handleScanQR} />
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-[#DCE3E6]">
+        <p className="text-lg font-semibold text-[#0F8A9D]">Loading...</p>
+      </div>
     );
+  }
+
+  if (error || !sectionDetail) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#DCE3E6] px-6 text-center">
+        <p className="text-lg font-semibold text-red-600">
+          {error || 'Section detail not found'}
+        </p>
+        <button
+          onClick={() => router.push('/student/sections')}
+          className="rounded-lg bg-[#0F8A9D] px-4 py-2 font-semibold text-white"
+        >
+          Back to sections
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col justify-between bg-[#DCE3E6]">
+      <Header onLogout={handleLogout} />
+      <Body
+        sectionName={sectionDetail.sectionName}
+        code={sectionDetail.code}
+        attendance={sectionDetail.attendance}
+        sessions={sectionDetail.sessions}
+      />
+      <Footer onScanQR={handleScanQR} />
+    </div>
+  );
 }

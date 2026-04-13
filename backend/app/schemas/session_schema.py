@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from uuid import UUID
 from datetime import datetime
 from typing import Optional
-
+from typing import List, Optional, Literal
 
 class SessionBase(BaseModel):
     Name: str
@@ -91,3 +91,26 @@ class SectionDeleteResponse(BaseModel):
     SectionID: UUID
     isDeleted: bool
     message: str
+
+class StudentSessionItem(BaseModel):
+    SessionID: UUID
+    name: str
+    time: datetime
+    attendanceRecordID: Optional[UUID] = None
+    checkInTime: Optional[datetime] = None
+    status: Literal["Attended", "Absent"]
+
+
+class StudentSectionDetailResponse(BaseModel):
+    SectionID: UUID
+    code: str
+    name: str
+    description: Optional[str] = None
+    attendedCount: int
+    totalSessions: int
+    sessions: List[StudentSessionItem]
+
+
+class StudentSectionDetailApiResponse(BaseModel):
+    message: str
+    data: StudentSectionDetailResponse

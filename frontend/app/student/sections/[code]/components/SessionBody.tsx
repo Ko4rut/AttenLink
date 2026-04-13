@@ -1,9 +1,9 @@
 type SessionItem = {
-  id: number;
+  id: string;
   title: string;
   date: string;
   checkIn: string;
-  status: string;
+  status: "Attended" | "Absent";
 };
 
 type SectionBodyProps = {
@@ -37,41 +37,52 @@ export default function Body({
       </div>
 
       <div className="mt-8 space-y-5">
-        {sessions.map((session) => {
-          const isAttended = session.status === 'Attended';
+        {sessions.length === 0 ? (
+          <div className="rounded-2xl bg-[#F6F4F4] px-6 py-8 text-center">
+            <p className="text-[18px] font-bold text-[#0F8A9D]">
+              No sessions have been organized yet
+            </p>
+            <p className="mt-2 text-[14px] text-[#7A7A7A]">
+              Please wait for your teacher to create a session.
+            </p>
+          </div>
+        ) : (
+          sessions.map((session) => {
+            const isAttended = session.status === "Attended";
 
-          return (
-            <div
-              key={session.id}
-              className="flex overflow-hidden rounded-2xl bg-[#F6F4F4]"
-            >
-              <div className="flex min-h-22 w-27.5 items-start bg-[#0F8A9D] px-4 py-3">
-                <span className="text-[22px] font-bold text-white">
-                  {session.title}
-                </span>
-              </div>
-
-              <div className="flex flex-1 items-start justify-between px-4 py-3">
-                <div>
-                  <p className="text-[16px] font-bold text-black">
-                    {session.date}
-                  </p>
-                  <p className="mt-1 text-[12px] text-[#B8B8B8]">
-                    Check-in: {session.checkIn}
-                  </p>
+            return (
+              <div
+                key={session.id}
+                className="flex overflow-hidden rounded-2xl bg-[#F6F4F4]"
+              >
+                <div className="flex min-h-22 w-27.5 items-start bg-[#0F8A9D] px-4 py-3">
+                  <span className="text-[22px] font-bold text-white">
+                    {session.title}
+                  </span>
                 </div>
 
-                <div
-                  className={`min-w-27.5 rounded-lg px-3 py-1 text-center text-[14px] font-bold text-white ${
-                    isAttended ? 'bg-[#299115]' : 'bg-[#D50000]'
-                  }`}
-                >
-                  {session.status}
+                <div className="flex flex-1 items-start justify-between px-4 py-3">
+                  <div>
+                    <p className="text-[16px] font-bold text-black">
+                      {session.date}
+                    </p>
+                    <p className="mt-1 text-[12px] text-[#B8B8B8]">
+                      Check-in: {session.checkIn}
+                    </p>
+                  </div>
+
+                  <div
+                    className={`min-w-27.5 rounded-lg px-3 py-1 text-center text-[14px] font-bold text-white ${
+                      isAttended ? "bg-[#299115]" : "bg-[#D50000]"
+                    }`}
+                  >
+                    {session.status}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </main>
   );

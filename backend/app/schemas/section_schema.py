@@ -38,3 +38,14 @@ class SectionListResponse(BaseModel):
     limit: int
     total: int
     totalPages: int
+
+class StudentSectionItem(BaseModel):
+    SectionID: UUID
+    code: str
+    name: str
+    sessionsCount: int
+
+
+class StudentSectionListResponse(BaseModel):
+    message: str
+    data: list[StudentSectionItem]

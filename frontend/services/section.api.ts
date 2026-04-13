@@ -16,6 +16,19 @@ export type SectionListResponse = {
   totalPages: number;
 };
 
+export type StudentSectionItem = {
+  SectionID: string;
+  code: string;
+  name: string;
+  sessionsCount: number;
+};
+
+export type StudentSectionListResponse = {
+  message: string;
+  data: StudentSectionItem[];
+};
+
+
 export const getSectionsByTeacher = async (
   teacherUserId: string,
   page: number = 1,
@@ -50,5 +63,10 @@ export const createSection = async (
     },
   });
 
+  return res.data;
+};
+
+export const getSectionsByStudent = async (): Promise<StudentSectionListResponse> => {
+  const res = await apiClient.get("/sections/Student/sections");
   return res.data;
 };
