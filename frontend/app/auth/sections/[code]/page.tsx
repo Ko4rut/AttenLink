@@ -16,7 +16,11 @@ export default function SectionDetailPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const sectionId = params.code as string;
-  const code = searchParams.get('code') as string;
+  const rawCode = searchParams.get('code') ?? '';
+  const [code, namePart] = rawCode.split('?name=');
+
+  const name = searchParams.get('name') ?? namePart ?? '';
+  const nameValue = searchParams.get('name')?.split('=')[1] ?? '';
   // console.log('Section Detail Page - code:', code, 'sectionId:', sectionId);
   const router = useRouter();
 
@@ -120,7 +124,7 @@ export default function SectionDetailPage() {
 
         <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
           <div className="p-6 border-b">
-            <h2 className="text-xl text-[#09637E]">Data Structure and Algorithms</h2>
+            <h2 className="text-xl text-[#09637E]">{name}</h2>
             <p className="text-sm text-gray-600">Code: {code}</p>
             <p className="text-sm text-gray-600">Students Enrolled: {studentsEnrolled}</p>
           </div>
@@ -158,18 +162,6 @@ export default function SectionDetailPage() {
                       <td className="px-6 py-4 text-black">{index + 1}</td>
                       <td className="px-6 py-4 font-medium text-black">{s.name}</td>
                       <td className="px-6 py-4 text-black">{s.time}</td>
-
-                      {/* <td className="px-6 py-4 text-black">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-xs font-medium ${s.status === 'Active'
-                            ? 'bg-green-300 text-green-800'
-                            : 'bg-red-300 text-red-800'
-                            }`}
-                        >
-                          {s.status}
-                        </span>
-                      </td> */}
-
                       <td
                         onClick={() => {
                           setSelectedSession(s.name);
