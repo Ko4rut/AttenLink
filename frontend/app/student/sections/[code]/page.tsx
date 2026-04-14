@@ -12,7 +12,7 @@ type SessionItem = {
   title: string;
   date: string;
   checkIn: string;
-  status: 'Attended' | 'Absent';
+  status: string;
 };
 
 type SectionDetailData = {

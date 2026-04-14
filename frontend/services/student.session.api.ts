@@ -5,7 +5,7 @@ export type SessionItem = {
   title: string;
   date: string;
   checkIn: string;
-  status: 'Attended' | 'Absent';
+  status: string;
 };
 
 export type SectionDetailData = {
@@ -78,9 +78,7 @@ function mapSectionDetailToUI(section: SectionDetailApiResponse): SectionDetailD
       date: formatSessionTimeFromApi(session.time),
       checkIn: formatCheckInTimeFromApi(session.checkInTime),
       status:
-        session.status === 'ATTENDED' || session.status === 'Attended'
-          ? 'Attended'
-          : 'Absent',
+        session.status 
     })),
   };
 }

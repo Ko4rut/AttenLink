@@ -3,7 +3,7 @@ type SessionItem = {
   title: string;
   date: string;
   checkIn: string;
-  status: "Attended" | "Absent";
+  status: string;
 };
 
 type SectionBodyProps = {
@@ -12,6 +12,18 @@ type SectionBodyProps = {
   attendance: string;
   sessions: SessionItem[];
 };
+
+function getStatusClass(status: string) {
+  if (status === 'Present') {
+    return 'bg-green-100 text-green-800';
+  }
+
+  if (status === 'Absent') {
+    return 'bg-red-100 text-red-800';
+  }
+
+  return 'bg-yellow-100 text-yellow-800';
+}
 
 export default function Body({
   sectionName,
@@ -48,8 +60,6 @@ export default function Body({
           </div>
         ) : (
           sessions.map((session) => {
-            const isAttended = session.status === "Attended";
-
             return (
               <div
                 key={session.id}
@@ -72,9 +82,9 @@ export default function Body({
                   </div>
 
                   <div
-                    className={`min-w-27.5 rounded-lg px-3 py-1 text-center text-[14px] font-bold text-white ${
-                      isAttended ? "bg-[#299115]" : "bg-[#D50000]"
-                    }`}
+                    className={`min-w-27.5 rounded-lg px-3 py-1 text-center text-[14px] font-bold ${getStatusClass(
+                      session.status
+                    )}`}
                   >
                     {session.status}
                   </div>
