@@ -14,12 +14,21 @@ from app.schemas.section_schema import StudentSectionItem
 def create_section_service(section: SectionCreate, teacher_user_id: UUID, db: Session):
     try:
         with db.begin():
+            existing_section = db.query(SectionDB).filter(
+                SectionDB.code == section.code
+            ).first()
+            if existing_section:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Section code already exists"
+                )
             new_section = SectionDB(
                 teacherUserID=teacher_user_id,
                 code=section.code,
                 name=section.name,
                 description=section.description
             )
+            
             db.add(new_section)
             db.flush()
 
@@ -119,6 +128,7 @@ def get_sections_by_teacher_id(
             "code": section.code,
             "name": section.name,
             "enrolled": enrolled_count or 0,
+            "description": section.description,
             "totalSessions": total_sessions or 0
         })
 

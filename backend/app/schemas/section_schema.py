@@ -30,6 +30,7 @@ class SectionListItem(BaseModel):
     code: str
     name: str
     enrolled: int
+    description: str
     totalSessions: int
 
 class SectionListResponse(BaseModel):

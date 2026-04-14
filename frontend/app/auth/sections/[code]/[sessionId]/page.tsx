@@ -12,7 +12,6 @@ import {
   attendanceApi,
   mapAttendanceRecordToRow,
   type AttendanceRow,
-  type AttendanceManualUpdatePayload,
   type SessionAttendanceResponse,
 } from '@/services/attendance.api';
 

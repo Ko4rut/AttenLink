@@ -123,7 +123,8 @@ def delete_section(
 
 @router.get(
     "/sections/{section_code}",
-    response_model=StudentSectionDetailApiResponse
+    response_model=StudentSectionDetailApiResponse,
+    summary="Get session info for student interface"
 )
 def get_section_detail_for_student(
     section_code: str,

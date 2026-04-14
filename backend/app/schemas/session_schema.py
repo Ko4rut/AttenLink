@@ -98,7 +98,7 @@ class StudentSessionItem(BaseModel):
     time: datetime
     attendanceRecordID: Optional[UUID] = None
     checkInTime: Optional[datetime] = None
-    status: Literal["Attended", "Absent"]
+    status: Literal["Present", "Absent", "Late"]
 
 
 class StudentSectionDetailResponse(BaseModel):

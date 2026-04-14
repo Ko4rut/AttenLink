@@ -1,5 +1,6 @@
 'use client';
 
+import axios from 'axios';
 import { FiArrowLeft } from "react-icons/fi";
 import { useRouter } from 'next/navigation';
 import CreateSectionModal from "@/app/auth/sections/components/CreateSectionModal";
@@ -53,7 +54,19 @@ export default function SectionHeader() {
             window.location.reload();
         } catch (error) {
             console.error('Create section failed:', error);
-            alert('Create section failed');
+
+            if (axios.isAxiosError(error)) {
+                const message =
+                    error.response?.data?.detail ||
+                    error.response?.data?.message ||
+                    'Create section failed';
+
+                alert(message);
+            } else if (error instanceof Error) {
+                alert(error.message);
+            } else {
+                alert('Create section failed');
+            }
         } finally {
             setLoading(false);
         }

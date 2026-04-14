@@ -485,7 +485,7 @@ def get_session_by_section_4Student_service(
                     "time": session.Time,
                     "attendanceRecordID": attendance.AttendanceRecordID,
                     "checkInTime": attendance.CreateAt,
-                    "status": "Attended"
+                    "status": attendance.status
                 })
             else:
                 session_items.append({
